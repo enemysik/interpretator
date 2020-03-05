@@ -1,7 +1,7 @@
 export type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'INTEGER_DIV' |'FLOAT_DIV';
 export type PascalKeywordsType = 'BEGIN' | 'END' | 'PROGRAM'| 'VAR'| 'INTEGER_DIV'| 'INTEGER'| 'REAL' | 'PROCEDURE';
 export type TokenType = BinOpsType | PascalKeywordsType | SyntaxType | 'EOF' | 'ASSIGN' | 'SEMI' | 'DOT' | 'ID' | 'INTEGER_CONST' |'REAL_CONST';
-export type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen';
+export type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen' | 'PIPE';
 
 export type ValueType = string | number;
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d)/;
@@ -130,6 +130,10 @@ export class Lexer {
       if (/\./.test(this.currentChar)) {
         this.advance();
         return new Token('DOT', '.');
+      }
+      if (/\|/.test(this.currentChar)) {
+        this.advance();
+        return new Token('PIPE', '|');
       }
 
       if (/\d/.test(this.currentChar))
@@ -398,9 +402,7 @@ export class Parser {
     return results;
   }
   compoundStatement() {
-    this.eat('BEGIN');
     const node = this.statementList();
-    this.eat('END');
     const root = new Compound();
     node.forEach(element => {
       root.children.push(element);
@@ -408,42 +410,15 @@ export class Parser {
     return root;
   }
   program() {
-    this.eat('PROGRAM');
-    const varNode = this.variable();
-    const progName = varNode.value as string;
-    this.eat('SEMI');
     const blockNode = this.block();
-    const programNode = new Program(progName, blockNode);
-    this.eat('DOT');
+    const programNode = new Program('', blockNode);
+    this.eat('EOF');
     return programNode;
   }
   block() {
-    const declarationNode = this.declarations();
+    const declarationNode = [];
     const compoundStatementNode = this.compoundStatement();
     return new Block(declarationNode, compoundStatementNode);
-  }
-  declarations() {
-    const declarations = [];
-    if (this.currentToken.type === 'VAR') {
-      this.eat('VAR');
-      // @ts-ignore
-      while (this.currentToken.type === 'ID') {
-        const varDecl = this.variableDeclaration()
-        declarations.push(...varDecl);
-        this.eat('SEMI');
-      }
-    }
-    while (this.currentToken.type === 'PROCEDURE') {
-      this.eat('PROCEDURE');
-      const procName = this.currentToken.value as string;
-      this.eat('ID');
-      this.eat('SEMI');
-      const blockNode = this.block();
-      const procDecl = new ProcedureDecl(procName, blockNode);
-      declarations.push(procDecl);
-      this.eat('SEMI');
-    }
-    return declarations;
   }
   variableDeclaration() {
     const varNodes = [new Var(this.currentToken)];
@@ -479,6 +454,16 @@ export class Parser {
     }
     while (this.currentToken.type === 'COMMA') {
       this.eat('COMMA');
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    while (this.currentToken.type === 'PIPE') {
+      this.eat('PIPE');
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    while (this.currentToken.type === 'SEMI') {
+      this.eat('SEMI');
       const node = this.expr();
       actualParams.push(node);
     }
@@ -590,28 +575,39 @@ export class Interpreter {
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  PROGRAM Part12;
-  VAR
-     a : INTEGER;
-  
-  BEGIN {Part12}
-     a = Test(10);
-  END.  {Part12}`;
+  C=test(5| 6| 3);
+  X=(10*C*(1+0.0012*(Tx-15)));
+  `;
   const lexer = new Lexer(text);
 
   // let tmp = lexer.getNextToken();
+  // const tokens = [tmp];
   // do {
-  //   console.log(tmp);
   //   tmp = lexer.getNextToken();
+  //   tokens.push(tmp);
   // } while (tmp.type !== 'EOF')
+  // for (let i = 0; i < tokens.length; i++) {
+  //   if (tokens[i].type === 'ASSIGN') {
+  //     console.log(tokens[i - 1].value);
+  //   }
+  // }
+  // for (let i = 0; i < tokens.length; i++) {
+  //   if (tokens[i].type === 'ID') {
+  //     console.log(tokens[i].value);
+  //   }
+  // }
   
   const parser = new Parser(lexer);
-  const globalScope = {};
-  // @ts-ignore
-  globalScope.Test = function (x) {
-    console.log(x);
-    return x * x;
-  }
+  const globalScope = {
+    'D': 0.1,
+    'A': 3,
+    'B': 7,
+    'Tx': 9,
+    test: (a, b, c) => {
+      console.log(a, b, c);
+      return 5;
+    }
+  };
   const interpreter = new Interpreter(parser, globalScope);
   interpreter.interpret();
   console.log(interpreter.GLOBAL_SCOPE);
