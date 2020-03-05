@@ -20,7 +20,7 @@ export class Token {
 export class Lexer {
   private text: string;
   private pos: number;
-  private currentChar: string;
+  public currentChar: string;
   private static RESERVED_KEYWORDS = {
     BEGIN: new Token('BEGIN', 'BEGIN'),
     END: new Token('END', 'END'),
@@ -274,6 +274,17 @@ export class ProcedureDecl extends AST {
   }
   
 }
+export class ProcedureCall extends AST {
+  procName: string;
+  actualParams: AST[];
+  token: Token;
+  constructor(procName: string, actualParams: AST[], token: Token) {
+    super();
+    this.procName = procName;
+    this.actualParams = actualParams;
+    this.token = token;
+  }
+}
 export class Parser {
   public lexer: Lexer
   public currentToken: Token;
@@ -363,11 +374,14 @@ export class Parser {
   statement() {
     if (this.currentToken.type === 'BEGIN') {
       return this.compoundStatement();
-    } else if (this.currentToken.type === 'ID') {
+    } 
+    if (this.currentToken.type === 'ID') {
+      if (this.lexer.currentChar === '(') {
+        return this.procCallStatement();
+      }
       return this.assignmentStatement();
-    } else {
-      return this.empty();
     }
+    return this.empty();
   }
   statementList() {
     const node = this.statement();
@@ -451,7 +465,24 @@ export class Parser {
     }
     return new Type(token);
   }
-  // decl
+  procCallStatement() {
+    const token = this.currentToken;
+    const procName = token.value as string;
+    this.eat('ID');
+    this.eat('LParen');
+    const actualParams = [];
+    if (this.currentToken.type !== 'RParen') {
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    while (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    this.eat('RParen');
+    return new ProcedureCall(procName, actualParams, token);
+  }
   parse() {
     const node = this.program();
     if (this.currentToken.type != 'EOF') {
@@ -508,6 +539,9 @@ export class Interpreter {
   private visitVarDecl(node: VarDecl) {}
   private visitType(node: Type) {}
   private visitProcedureDecl(node: ProcedureDecl) {}
+  private visitProcedureCall(node: ProcedureCall) {
+    node.actualParams.forEach(paramNode => this.visit(paramNode));
+  }
   private visitVar(node: Var) {
     const varName = node.value;
     const value = this.GLOBAL_SCOPE[varName];
@@ -542,6 +576,8 @@ export class Interpreter {
       return this.visitType(node)
     if (node instanceof ProcedureDecl)
       return this.visitProcedureDecl(node)
+    if (node instanceof ProcedureCall)
+      return this.visitProcedureCall(node)
   }
   interpret() {
     const tree = this.parser.parse();
