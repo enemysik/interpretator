@@ -1,6 +1,10 @@
-export type TokenType = 'EOF' | 'Integer' | 'Plus' | 'Minus' | 'Div' | 'Mul' | 'LParen' | 'RParen'
+export type BinOpsType = 'Plus' | 'Minus' | 'Div' | 'Mul';
+export type PascalKeywordsType = 'BEGIN' | 'END';
+export type TokenType = BinOpsType | PascalKeywordsType | 'EOF' | 'Integer' | 'LParen' | 'RParen'
+| 'ASSIGN' | 'SEMI' | 'DOT' | 'ID';
 export type ValueType = string | number;
-
+export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d)/;
+export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 export class Token {
   public type: TokenType;
   public value: ValueType;
@@ -44,30 +48,79 @@ export class Num extends AST {
     this.value = token.value;
   }
 }
+export class Compound extends AST {
+  children = [];
+  constructor() {
+    super();
+  }
+}
+export class Assign extends AST {
+  left: Var;
+  token: Token;
+  right: AST;
+  constructor(left: Var, op: Token, right: AST) {
+    super();
+    this.left = left;
+    this.token = op;
+    this.right = right;
+  }
+}
+export class Var extends AST {
+  token: Token;
+  value: ValueType;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+    this.value = token.value
+  }
+}
+export class NoOp extends AST { }
 export class Lexer {
-  text: string;
-  pos: number;
-  currentChar: string;
+  private text: string;
+  private pos: number;
+  private currentChar: string;
+  private static RESERVED_KEYWORDS = {
+    BEGIN: new Token('BEGIN', 'BEGIN'),
+    END: new Token('END', 'END'),
+}
   constructor(text: string) {
     this.text = text;
     this.pos = 0;
     this.currentChar = this.text[this.pos];
   }
-  error() {
+  private peek() {
+    const peekPosition = this.pos + 1;
+    if (peekPosition > this.text.length - 1) {
+      return null;
+    } else {
+      return this.text[peekPosition];
+    }
+  }
+  private _id() {
+    let result = '';
+    while (this.currentChar != null && WORD_OR_DIGIT_REGEXP.test(this.currentChar)) {
+      result += this.currentChar;
+      this.advance();
+    }
+    const token = Lexer.RESERVED_KEYWORDS[result] || new Token('ID', result);
+    return token;
+  }
+  private error() {
     throw new Error('Invalid character');
   }
-  advance() {
+  private advance() {
     this.pos++;
     if (this.pos > this.text.length - 1)
       this.currentChar = null;
     else
       this.currentChar = this.text[this.pos];
   }
-  skipWhiteSpace() {
-    while (this.currentChar != null && this.currentChar === ' ')
+  private skipWhiteSpace() {
+    while (this.currentChar != null && 
+      (this.currentChar === ' ' || this.currentChar === '\n'))
       this.advance();
   }
-  integer() {
+  private integer() {
     let result = '';
     while (this.currentChar != null && /\d/.test(this.currentChar)) {
       result += this.currentChar;
@@ -77,8 +130,27 @@ export class Lexer {
   }
   getNextToken() {
     while (this.currentChar != null) {
-      if (this.currentChar === ' ')
+      if (this.currentChar === ' ' || this.currentChar === '\n')
         this.skipWhiteSpace();
+      if (WORD_REGEXP.test(this.currentChar)) {
+        return this._id();
+      }
+      
+      if (/\:/.test(this.currentChar) && /\=/.test(this.peek())) {
+        this.advance();
+        this.advance();
+        return new Token('ASSIGN', ':=');
+      }
+
+      if (/\;/.test(this.currentChar)) {
+        this.advance();
+        return new Token('SEMI', ';');
+      }
+
+      if (/\./.test(this.currentChar)) {
+        this.advance();
+        return new Token('DOT', '.');
+      }
 
       if (/\d/.test(this.currentChar))
         return new Token('Integer', this.integer())
@@ -126,7 +198,7 @@ export class Parser {
     this.currentToken = this.lexer.getNextToken();
   }
   error() {
-    throw new Error('Invalid syntax');
+    throw new Error(`Invalid syntax. ${this.currentToken.type}:${this.currentToken.value}`);
   }
   eat(tokenType: TokenType) {
     if (this.currentToken.type === tokenType)
@@ -152,6 +224,8 @@ export class Parser {
       const node = this.expr();
       this.eat('RParen');
       return node;
+    } else {
+      return this.variable();
     }
   }
   term(): AST {
@@ -180,16 +254,73 @@ export class Parser {
     }
     return node;
   }
+  empty() {
+    return new NoOp();
+  }
+  variable() {
+    const node = new Var(this.currentToken);  
+    this.eat('ID');
+    return node;
+  }
+  assignmentStatement() {
+    const left = this.variable();
+    const token = this.currentToken;
+    this.eat('ASSIGN');
+    const right = this.expr();
+    const node = new Assign(left, token, right);
+    return node;
+  }
+  statement() {
+    if (this.currentToken.type === 'BEGIN') {
+      return this.compoundStatement();
+    } else if (this.currentToken.type === 'ID') {
+      return this.assignmentStatement();
+    } else {
+      return this.empty();
+    }
+  }
+  statementList() {
+    const node = this.statement();
+    const results = [node];
+    while (this.currentToken.type === 'SEMI') {
+      this.eat('SEMI');
+      results.push(this.statement());
+    }
+    if (this.currentToken.type === 'ID') {
+      this.error();
+    }
+    return results;
+  }
+  compoundStatement() {
+    this.eat('BEGIN');
+    const node = this.statementList();
+    this.eat('END');
+    const root = new Compound();
+    node.forEach(element => {
+      root.children.push(element);
+    });
+    return root;
+  }
+  program() {
+    const node = this.compoundStatement();
+    this.eat('DOT');
+    return node;
+  }
   parse() {
-    return this.expr();
+    const node = this.program();
+    if (this.currentToken.type != 'EOF') {
+      this.error();
+    }
+    return node;
   }
 }
 export class Interpreter {
-  public parser: Parser;
+  private parser: Parser;
+  GLOBAL_SCOPE = {};
   constructor(parser: Parser) {
     this.parser = parser;
   }
-  visitBinOp(node: BinOp) {
+  private visitBinOp(node: BinOp) {
     if (node.op.type === 'Plus')
       return this.visit(node.left) + this.visit(node.right);
     if (node.op.type === 'Minus')
@@ -199,23 +330,48 @@ export class Interpreter {
     if (node.op.type === 'Div')
       return this.visit(node.left) / this.visit(node.right);
   }
-  visitUnaryOp(node: UnaryOp) {
+  private visitUnaryOp(node: UnaryOp) {
     const op = node.op.type;
     if (op === 'Plus')
       return +this.visit(node.expr);
     if (op === 'Minus')
       return -this.visit(node.expr);
   }
-  visitNum(node: Num) {
+  private visitNum(node: Num) {
     return node.value;
   }
-  visit(node: AST) {
+  private visitCompound(node: Compound) {
+    node.children.forEach(c => this.visit(c));
+  }
+  private visitNoOp(node: NoOp): void {}
+  private visitAssign(node: Assign) {
+    const varName = node.left.value;
+    this.GLOBAL_SCOPE[varName] = this.visit(node.right);
+  }
+  private visitVar(node: Var) {
+    const varName = node.value;
+    const value = this.GLOBAL_SCOPE[varName];
+    if (value === undefined) {
+      throw new Error(`Name error ${varName}`);
+    } else {
+      return value;
+    }
+  }
+  private visit(node: AST) {
     if (node instanceof BinOp)
       return this.visitBinOp(node)
     if (node instanceof UnaryOp)
       return this.visitUnaryOp(node)
     if (node instanceof Num)
       return this.visitNum(node)
+    if (node instanceof Assign)
+      return this.visitAssign(node)
+    if (node instanceof NoOp)
+      return this.visitNoOp(node)
+    if (node instanceof Var)
+      return this.visitVar(node)
+    if (node instanceof Compound)
+      return this.visitCompound(node)
   }
   interpret() {
     const tree = this.parser.parse();
@@ -223,11 +379,32 @@ export class Interpreter {
   }
 }
 function main() {
-  const text = '5 - - - + - (3 + 4) - +2';
+  // const text = '5 - - - + - (3 + 4) - +2';
+  const text = `
+BEGIN
+  BEGIN
+      number := МТабл();
+      a := number;
+      b := 10 * a + 10 * number / 4;
+      c := a - - b
+  END;
+  x := 11;
+END.`;
   const lexer = new Lexer(text);
-  const parser = new Parser(lexer);
-  const interpreter = new Interpreter(parser);
-  const result = interpreter.interpret();
-  console.log(result);
+
+  let tmp = lexer.getNextToken();
+  do {
+    console.log(tmp);
+    tmp = lexer.getNextToken();
+  } while (tmp.type !== 'EOF')
+  
+  // const parser = new Parser(lexer);
+  // const interpreter = new Interpreter(parser);
+  // interpreter.interpret();
+  // console.log(interpreter.GLOBAL_SCOPE);
 }
-main();
+try {
+  main();
+} catch (ex) {
+  console.error(ex.message);
+}
