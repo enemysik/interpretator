@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Token} from './token';
 
-export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s)/;
+export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s|\.)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
 type TokensObject = {
