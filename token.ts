@@ -1,5 +1,5 @@
 /* eslint-disable require-jsdoc */
-type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'INTEGER_DIV' |'FLOAT_DIV';
+type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'FLOAT_DIV';
 type VariableType = 'INTEGER_CONST' |'REAL_CONST' | 'STRING_CONST' |
   'ARRAY_CONST';
 type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen' | 'PIPE' |

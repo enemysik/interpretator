@@ -191,14 +191,13 @@ export class Parser {
   }
   private term(): AST {
     let node = this.factor();
-    while ((['INTEGER_DIV', 'FLOAT_DIV', 'Mul'] as TokenType[])
+    while ((['FLOAT_DIV', 'Mul'] as TokenType[])
         .indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
       if (token.type === 'Mul') {
         this.eat('Mul');
-      } else if (token.type === 'INTEGER_DIV') {
-        this.eat('INTEGER_DIV');
-      } if (token.type === 'FLOAT_DIV') {
+      }
+      if (token.type === 'FLOAT_DIV') {
         this.eat('FLOAT_DIV');
       }
       node = new BinOp(node, token, this.factor());

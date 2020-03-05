@@ -30,9 +30,6 @@ export class Interpreter {
     if (node.op.type === 'FLOAT_DIV') {
       return this.visit(node.left) / this.visit(node.right);
     }
-    if (node.op.type === 'INTEGER_DIV') {
-      return Math.trunc(this.visit(node.left) / this.visit(node.right));
-    }
     throw this.error();
   }
   private visitUnaryOp(node: UnaryOp): number {
