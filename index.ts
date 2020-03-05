@@ -6,10 +6,11 @@ import {Interpreter} from './interpreter';
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  Арифметика="test;test2"
+  Ариф метика="test;test2"
+  test2, 1 = 10,1
   C=test(5| 6| 3)
   X=(10*C*(1+0,0012*(Tx-15)))
-  F=2^2*3
+  F=test2, 1^2
   `;
   const lexer = new Lexer(text);
   const parser = new Parser(lexer);

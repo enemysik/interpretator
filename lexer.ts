@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Token} from './token';
 
-export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,)/;
+export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\s)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
 type TokensObject = {
@@ -33,6 +33,7 @@ export class Lexer {
       result += this.currentChar;
       this.advance();
     }
+    result = result.trim();
     const token = Lexer.RESERVED_KEYWORDS[result] || new Token('ID', result);
     return token;
   }
