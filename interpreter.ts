@@ -107,10 +107,9 @@ export class Lexer {
         return this._id();
       }
       
-      if (/\:/.test(this.currentChar) && /\=/.test(this.peek())) {
+      if (/\=/.test(this.currentChar)) {
         this.advance();
-        this.advance();
-        return new Token('ASSIGN', ':=');
+        return new Token('ASSIGN', '=');
       }
 
       if (/\:/.test(this.currentChar)) {
@@ -596,7 +595,7 @@ function main() {
      a : INTEGER;
   
   BEGIN {Part12}
-     a := Test(10);
+     a = Test(10);
   END.  {Part12}`;
   const lexer = new Lexer(text);
 
