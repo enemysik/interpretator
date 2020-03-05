@@ -1,3 +1,6 @@
+/* eslint-disable require-jsdoc */
+import {Token, ValueType, TokenType} from './token';
+import {Lexer} from './lexer';
 
 export abstract class AST { }
 export class BinOp extends AST {
@@ -5,7 +8,7 @@ export class BinOp extends AST {
   public op: Token;
   public right: AST
   constructor(left: AST, op: Token, right: AST) {
-    super()
+    super();
     this.left = left;
     this.op = op;
     this.right = right;
@@ -32,7 +35,7 @@ export class Num extends AST {
   }
 }
 export class Compound extends AST {
-  children = [];
+  children: AST[] = [];
   constructor() {
     super();
   }
@@ -54,7 +57,7 @@ export class Var extends AST {
   constructor(token: Token) {
     super();
     this.token = token;
-    this.value = token.value
+    this.value = token.value;
   }
 }
 export class NoOp extends AST { }
@@ -65,12 +68,12 @@ export class Program extends AST {
     super();
     this.name = name;
     this.block = block;
-  } 
+  }
 }
 export class Block extends AST {
-  declarations: [VarDecl];
+  declarations: VarDecl[];
   compoundStatement: Compound;
-  constructor(declaration, compoundStatement: Compound) {
+  constructor(declaration: VarDecl[], compoundStatement: Compound) {
     super();
     this.declarations = declaration;
     this.compoundStatement = compoundStatement;
@@ -100,7 +103,6 @@ export class ProcedureDecl extends AST {
     this.procName = procName;
     this.blockNode = blockNode;
   }
-  
 }
 export class FunctionCall extends AST {
   procName: string;
@@ -121,13 +123,15 @@ export class Parser {
     this.currentToken = this.lexer.getNextToken();
   }
   error() {
-    throw new Error(`Invalid syntax. ${this.currentToken.type}:${this.currentToken.value}`);
+    throw new Error('Invalid syntax. ' +
+    `${this.currentToken.type}:${this.currentToken.value}`);
   }
   eat(tokenType: TokenType) {
-    if (this.currentToken.type === tokenType)
+    if (this.currentToken.type === tokenType) {
       this.currentToken = this.lexer.getNextToken();
-    else
+    } else {
       this.error();
+    }
   }
   factor(): AST {
     const token = this.currentToken;
@@ -160,14 +164,15 @@ export class Parser {
   }
   term(): AST {
     let node = this.factor();
-    while ((['INTEGER_DIV', 'FLOAT_DIV', 'Mul'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
+    while ((['INTEGER_DIV', 'FLOAT_DIV', 'Mul'] as TokenType[])
+        .indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
       if (token.type === 'Mul') {
         this.eat('Mul');
       } else if (token.type === 'INTEGER_DIV') {
         this.eat('INTEGER_DIV');
       } if (token.type === 'FLOAT_DIV') {
-        this.eat('FLOAT_DIV')
+        this.eat('FLOAT_DIV');
       }
       node = new BinOp(node, token, this.factor());
     }
@@ -175,7 +180,8 @@ export class Parser {
   }
   expr(): AST {
     let node = this.term();
-    while ((['Minus', 'Plus'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
+    while ((['Minus', 'Plus'] as TokenType[])
+        .indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
       if (token.type === 'Minus') {
         this.eat('Minus');
@@ -205,7 +211,7 @@ export class Parser {
   statement() {
     if (this.currentToken.type === 'BEGIN') {
       return this.compoundStatement();
-    } 
+    }
     if (this.currentToken.type === 'ID') {
       if (this.lexer.currentChar === '(') {
         return this.functionCallStatement();
@@ -229,7 +235,7 @@ export class Parser {
   compoundStatement() {
     const node = this.statementList();
     const root = new Compound();
-    node.forEach(element => {
+    node.forEach((element) => {
       root.children.push(element);
     });
     return root;
@@ -241,7 +247,7 @@ export class Parser {
     return programNode;
   }
   block() {
-    const declarationNode = [];
+    const declarationNode: VarDecl[] = [];
     const compoundStatementNode = this.compoundStatement();
     return new Block(declarationNode, compoundStatementNode);
   }
@@ -256,7 +262,7 @@ export class Parser {
     this.eat('COLON');
 
     const typeNode = this.typeSpec();
-    return [varNodes.map(varNode => new VarDecl(varNode, typeNode))];
+    return [varNodes.map((varNode) => new VarDecl(varNode, typeNode))];
   }
   typeSpec() {
     const token = this.currentToken;

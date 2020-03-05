@@ -1,3 +1,8 @@
+import {Lexer} from './lexer';
+import {Parser} from './parser';
+import {Interpreter} from './interpreter';
+
+/* eslint-disable require-jsdoc */
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
@@ -22,17 +27,17 @@ function main() {
   //     console.log(tokens[i].value);
   //   }
   // }
-  
+
   const parser = new Parser(lexer);
   const globalScope = {
     'D': 0.1,
     'A': 3,
     'B': 7,
     'Tx': 9,
-    test: (a, b, c) => {
+    'test': (a, b, c) => {
       console.log(a, b, c);
       return 5;
-    }
+    },
   };
   const interpreter = new Interpreter(parser, globalScope);
   interpreter.interpret();

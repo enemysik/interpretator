@@ -1,11 +1,17 @@
+/* eslint-disable require-jsdoc */
+import {Token} from './token';
+
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
+type TokensObject = {
+  [name: string]: Token;
+}
 export class Lexer {
   private text: string;
   private pos: number;
-  public currentChar: string;
-  private static RESERVED_KEYWORDS = {
+  public currentChar: string | null;
+  private static RESERVED_KEYWORDS: TokensObject = {
     BEGIN: new Token('BEGIN', 'BEGIN'),
     END: new Token('END', 'END'),
     PROGRAM: new Token('PROGRAM', 'PROGRAM'),
@@ -14,7 +20,7 @@ export class Lexer {
     INTEGER: new Token('INTEGER', 'INTEGER'),
     REAL: new Token('REAL', 'REAL'),
     PROCEDURE: new Token('PROCEDURE', 'PROCEDURE'),
-}
+  }
   constructor(text: string) {
     this.text = text;
     this.pos = 0;
@@ -30,7 +36,8 @@ export class Lexer {
   }
   private _id() {
     let result = '';
-    while (this.currentChar != null && WORD_OR_DIGIT_REGEXP.test(this.currentChar)) {
+    while (this.currentChar != null &&
+      WORD_OR_DIGIT_REGEXP.test(this.currentChar)) {
       result += this.currentChar;
       this.advance();
     }
@@ -38,7 +45,7 @@ export class Lexer {
     return token;
   }
   private skipComment() {
-    while (!/\}/.test(this.currentChar)) {
+    while (!/\}/.test(this.currentChar!)) {
       this.advance();
     }
     this.advance();
@@ -48,15 +55,17 @@ export class Lexer {
   }
   private advance() {
     this.pos++;
-    if (this.pos > this.text.length - 1)
+    if (this.pos > this.text.length - 1) {
       this.currentChar = null;
-    else
+    } else {
       this.currentChar = this.text[this.pos];
+    }
   }
   private skipWhiteSpace() {
-    while (this.currentChar != null && 
-      (this.currentChar === ' ' || this.currentChar === '\n'))
+    while (this.currentChar != null &&
+      (this.currentChar === ' ' || this.currentChar === '\n')) {
       this.advance();
+    }
   }
   private number() {
     let result = '';
@@ -64,7 +73,7 @@ export class Lexer {
       result += this.currentChar;
       this.advance();
     }
-    if (/\./.test(this.currentChar)) {
+    if (/\./.test(this.currentChar!)) {
       result += this.currentChar;
       this.advance();
       while (this.currentChar != null && /\d/.test(this.currentChar)) {
@@ -90,7 +99,7 @@ export class Lexer {
       if (WORD_REGEXP.test(this.currentChar)) {
         return this._id();
       }
-      
+
       if (/\=/.test(this.currentChar)) {
         this.advance();
         return new Token('ASSIGN', '=');
@@ -120,37 +129,38 @@ export class Lexer {
         return new Token('PIPE', '|');
       }
 
-      if (/\d/.test(this.currentChar))
+      if (/\d/.test(this.currentChar)) {
         return this.number();
+      }
 
       if (/\+/.test(this.currentChar)) {
-        this.advance()
-        return new Token('Plus', '+')
+        this.advance();
+        return new Token('Plus', '+');
       }
 
       if (/\-/.test(this.currentChar)) {
-        this.advance()
-        return new Token('Minus', '-')
+        this.advance();
+        return new Token('Minus', '-');
       }
 
       if (/\*/.test(this.currentChar)) {
-        this.advance()
-        return new Token('Mul', '*')
+        this.advance();
+        return new Token('Mul', '*');
       }
 
       if (/\//.test(this.currentChar)) {
-        this.advance()
-        return new Token('FLOAT_DIV', '/')
+        this.advance();
+        return new Token('FLOAT_DIV', '/');
       }
 
       if (/\(/.test(this.currentChar)) {
-        this.advance()
-        return new Token('LParen', '(')
+        this.advance();
+        return new Token('LParen', '(');
       }
 
       if (/\)/.test(this.currentChar)) {
-        this.advance()
-        return new Token('RParen', ')')
+        this.advance();
+        return new Token('RParen', ')');
       }
 
       this.error();
