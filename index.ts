@@ -70,12 +70,18 @@ function main() {
       console.log(tableName, row, column); // TODO implement
       return 0;
     },
+    'INT': function(x: number) {
+      return Math.trunc(x);
+    },
+    'FRAC': function(x: number) {
+      return x % 1; // TODO accuracy
+    },
+    'ЧЗП': function(x: number) {
+      console.log(x);
+      return 0; // TODO implement
+    },
     'Ошибка': function(text: string) {
       throw new Error(text);
-    },
-    'test': (a: number, b: number, c: number) => {
-      console.log(a, b, c);
-      return 5;
     },
   };
   const interpreter = new Interpreter(parser, globalScope);
