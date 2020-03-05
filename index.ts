@@ -19,6 +19,9 @@ function main() {
     'A': 3,
     'B': 7,
     'Tx': 9,
+    'if': function(condition: 0 | 1, trueResult: number, elseResult: number) {
+      return condition === 1 ? trueResult : elseResult;
+    },
     'test': (a: number, b: number, c: number) => {
       console.log(a, b, c);
       return 5;

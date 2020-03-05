@@ -2,9 +2,11 @@
 type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'FLOAT_DIV';
 type VariableType = 'INTEGER_CONST' |'REAL_CONST' | 'STRING_CONST' |
   'ARRAY_CONST';
-type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen' | 'PIPE' |
-  'SEMI' | 'DOT' | 'ENTER' | 'DQuote' | 'CARET';
-export type TokenType = BinOpsType | SyntaxType | VariableType |
+type SyntaxType = 'LParen' | 'RParen' | 'PIPE' |
+  'SEMI' | 'ENTER' | 'CARET';
+type BooleanType = 'EQUAL' | 'NOT_EQUAL' | 'MORE' | 'LESS' |
+  'MORE_OR_EQUAL' | 'LESS_OR_EQUAL';
+export type TokenType = BinOpsType | SyntaxType | VariableType | BooleanType |
   'EOF' | 'ASSIGN' | 'ID';
 
 export type ValueType = string | number | null;

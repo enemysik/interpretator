@@ -106,71 +106,63 @@ export class Lexer {
         this.skipComment();
         continue;
       }
-      if (WORD_REGEXP.test(this.currentChar)) {
-        return this._id();
+      // #region Two symbol operators
+      if (/\=/.test(this.currentChar) && /\=/.test(this.peek()!)) {
+        this.advance();
+        this.advance();
+        return new Token('EQUAL', '==');
       }
+
+      if (/\</.test(this.currentChar) && /\>/.test(this.peek()!)) {
+        this.advance();
+        this.advance();
+        return new Token('NOT_EQUAL', '<>');
+      }
+
+      if (/\>/.test(this.currentChar) && /\=/.test(this.peek()!)) {
+        this.advance();
+        this.advance();
+        return new Token('MORE_OR_EQUAL', '>=');
+      }
+
+      if (/\</.test(this.currentChar) && /\=/.test(this.peek()!)) {
+        this.advance();
+        this.advance();
+        return new Token('LESS_OR_EQUAL', '<=');
+      }
+      // #endregion
+      // #region boolean operators
+      if (/\>/.test(this.currentChar)) {
+        this.advance();
+        return new Token('MORE', '>');
+      }
+
+      if (/\</.test(this.currentChar)) {
+        this.advance();
+        return new Token('LESS', '<');
+      }
+      // #endregion
+      // #region const detection
       if (/\"/.test(this.currentChar)) {
         return this.string();
-      }
-
-      if (/\=/.test(this.currentChar)) {
-        this.advance();
-        return new Token('ASSIGN', '=');
-      }
-
-      if (this.currentChar === '\n') {
-        this.advance();
-        return new Token('ENTER', '\n');
-      }
-
-      if (/\"/.test(this.currentChar)) {
-        this.advance();
-        return new Token('DQuote', '"');
-      }
-
-      if (/\^/.test(this.currentChar)) {
-        this.advance();
-        return new Token('CARET', '^');
-      }
-
-      if (/\:/.test(this.currentChar)) {
-        this.advance();
-        return new Token('COLON', ':');
-      }
-
-      if (/\,/.test(this.currentChar)) {
-        this.advance();
-        return new Token('COMMA', ',');
-      }
-
-      if (/\;/.test(this.currentChar)) {
-        this.advance();
-        return new Token('SEMI', ';');
-      }
-
-      if (/\./.test(this.currentChar)) {
-        this.advance();
-        return new Token('DOT', '.');
-      }
-      if (/\|/.test(this.currentChar)) {
-        this.advance();
-        return new Token('PIPE', '|');
       }
 
       if (/\d/.test(this.currentChar)) {
         return this.number();
       }
-
-      if (/\+/.test(this.currentChar)) {
+      // #endregion
+      // #region function arguments separators
+      if (/\;/.test(this.currentChar)) {
         this.advance();
-        return new Token('Plus', '+');
+        return new Token('SEMI', ';');
       }
 
-      if (/\-/.test(this.currentChar)) {
+      if (/\|/.test(this.currentChar)) {
         this.advance();
-        return new Token('Minus', '-');
+        return new Token('PIPE', '|');
       }
-
+      // #endregion
+      // #region Math operations
       if (/\*/.test(this.currentChar)) {
         this.advance();
         return new Token('Mul', '*');
@@ -181,6 +173,20 @@ export class Lexer {
         return new Token('FLOAT_DIV', '/');
       }
 
+      if (/\-/.test(this.currentChar)) {
+        this.advance();
+        return new Token('Minus', '-');
+      }
+      if (/\+/.test(this.currentChar)) {
+        this.advance();
+        return new Token('Plus', '+');
+      }
+      if (/\^/.test(this.currentChar)) {
+        this.advance();
+        return new Token('CARET', '^');
+      }
+      // #endregion
+      // #region parentheses
       if (/\(/.test(this.currentChar)) {
         this.advance();
         return new Token('LParen', '(');
@@ -189,6 +195,21 @@ export class Lexer {
       if (/\)/.test(this.currentChar)) {
         this.advance();
         return new Token('RParen', ')');
+      }
+      // #endregion
+
+      if (WORD_REGEXP.test(this.currentChar)) {
+        return this._id();
+      }
+
+      if (/\=/.test(this.currentChar)) {
+        this.advance();
+        return new Token('ASSIGN', '=');
+      }
+
+      if (this.currentChar === '\n') {
+        this.advance();
+        return new Token('ENTER', '\n');
       }
 
       this.error();
