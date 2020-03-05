@@ -13,19 +13,17 @@ export class Token {
   }
 }
 
-export class Interpreter {
+export class Lexer {
   text: string;
   pos: number;
-  currentToken: Token;
   currentChar: string;
   constructor(text: string) {
     this.text = text;
     this.pos = 0;
-    this.currentToken = null;
     this.currentChar = this.text[this.pos];
   }
   error() {
-    throw new Error('Error parsing input');
+    throw new Error('Invalid character');
   }
   advance() {
     this.pos++;
@@ -67,9 +65,21 @@ export class Interpreter {
     }
     return new Token('EOF', null);
   }
+}
+
+export class Interpreter {
+  public lexer: Lexer
+  public currentToken: Token;
+  constructor(lexer: Lexer) {
+    this.currentToken = null;
+    this.lexer = lexer;
+  }
+  error() {
+    throw new Error('Invalid syntax');
+  }
   eat(tokenType: TokenType) {
     if (this.currentToken.type === tokenType)
-      this.currentToken = this.getNextToken();
+      this.currentToken = this.lexer.getNextToken();
     else
     this.error();
   }
@@ -79,16 +89,15 @@ export class Interpreter {
     return token.value;
   }
   expr() {
-    this.currentToken = this.getNextToken();
     let result = this.term() as number;
     while (['Minus', 'Plus'].indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
       if (token.type === 'Minus') {
         this.eat('Minus');
-        result += this.term() as number;
+        result -= this.term() as number;
       } else if (token.type === 'Plus') {
         this.eat('Plus');
-        result -= this.term() as number;
+        result += this.term() as number;
       }
     }
     return result;
@@ -96,7 +105,8 @@ export class Interpreter {
 }
 function main() {
   const text = '54  -3';
-  const interpreter = new Interpreter(text);
+  const lexer = new Lexer(text);
+  const interpreter = new Interpreter(lexer);
   const result = interpreter.expr();
   console.log(result);
 }
