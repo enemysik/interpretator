@@ -189,8 +189,17 @@ export class Parser {
     }
     return this.variable();
   }
-  private term(): AST {
+  private sword() {
     let node = this.factor();
+    while ((['CARET'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
+      const token = this.currentToken;
+      this.eat('CARET');
+      node = new BinOp(node, token, this.factor());
+    }
+    return node;
+  }
+  private term(): AST {
+    let node = this.sword();
     while ((['FLOAT_DIV', 'Mul'] as TokenType[])
         .indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
@@ -200,7 +209,7 @@ export class Parser {
       if (token.type === 'FLOAT_DIV') {
         this.eat('FLOAT_DIV');
       }
-      node = new BinOp(node, token, this.factor());
+      node = new BinOp(node, token, this.sword());
     }
     return node;
   }

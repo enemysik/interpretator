@@ -127,6 +127,11 @@ export class Lexer {
         return new Token('DQuote', '"');
       }
 
+      if (/\^/.test(this.currentChar)) {
+        this.advance();
+        return new Token('CARET', '^');
+      }
+
       if (/\:/.test(this.currentChar)) {
         this.advance();
         return new Token('COLON', ':');

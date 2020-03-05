@@ -3,7 +3,7 @@ type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'FLOAT_DIV';
 type VariableType = 'INTEGER_CONST' |'REAL_CONST' | 'STRING_CONST' |
   'ARRAY_CONST';
 type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen' | 'PIPE' |
-  'SEMI' | 'DOT' | 'ENTER' | 'DQuote';
+  'SEMI' | 'DOT' | 'ENTER' | 'DQuote' | 'CARET';
 export type TokenType = BinOpsType | SyntaxType | VariableType |
   'EOF' | 'ASSIGN' | 'ID';
 
