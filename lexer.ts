@@ -64,8 +64,8 @@ export class Lexer {
       result += this.currentChar;
       this.advance();
     }
-    if (/\./.test(this.currentChar!)) {
-      result += this.currentChar;
+    if (/(\,|\.)/.test(this.currentChar!)) {
+      result += '.'; // js support only DOT
       this.advance();
       while (this.currentChar != null && /\d/.test(this.currentChar)) {
         result +=this.currentChar;

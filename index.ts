@@ -8,7 +8,8 @@ function main() {
   const text = `
   Арифметика="test;test2"
   C=test(5| 6| 3)
-  X=(10*C*(1+0.0012*(Tx-15)))
+  X=(10*C*(1+0,0012*(Tx-15)))
+  F=3.1 + 3,1
   `;
   const lexer = new Lexer(text);
   const parser = new Parser(lexer);

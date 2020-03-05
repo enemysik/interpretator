@@ -31,7 +31,7 @@ export class Num extends AST {
   constructor(token: Token) {
     super();
     this.token = token;
-    this.value = token.value;
+    this.value = Number(token.value);
   }
 }
 export class Compound extends AST {
