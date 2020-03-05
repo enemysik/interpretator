@@ -1,5 +1,5 @@
 export type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'INTEGER_DIV' |'FLOAT_DIV';
-export type PascalKeywordsType = 'BEGIN' | 'END' | 'PROGRAM'| 'VAR'| 'INTEGER_DIV'| 'INTEGER'| 'REAL';
+export type PascalKeywordsType = 'BEGIN' | 'END' | 'PROGRAM'| 'VAR'| 'INTEGER_DIV'| 'INTEGER'| 'REAL' | 'PROCEDURE';
 export type TokenType = BinOpsType | PascalKeywordsType | SyntaxType | 'EOF' | 'ASSIGN' | 'SEMI' | 'DOT' | 'ID' | 'INTEGER_CONST' |'REAL_CONST';
 export type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen';
 
@@ -17,99 +17,6 @@ export class Token {
     return `Token(${this.type}, ${this.value})`;
   }
 }
-export abstract class AST { }
-export class BinOp extends AST {
-  public left: AST;
-  public op: Token;
-  public right: AST
-  constructor(left: AST, op: Token, right: AST) {
-    super()
-    this.left = left;
-    this.op = op;
-    this.right = right;
-  }
-}
-export class UnaryOp extends AST {
-  token: Token;
-  op: Token;
-  expr: AST
-  constructor(op: Token, expr: AST) {
-    super();
-    this.token = op;
-    this.op = op;
-    this.expr = expr;
-  }
-}
-export class Num extends AST {
-  public token: Token;
-  public value: ValueType;
-  constructor(token: Token) {
-    super();
-    this.token = token;
-    this.value = token.value;
-  }
-}
-export class Compound extends AST {
-  children = [];
-  constructor() {
-    super();
-  }
-}
-export class Assign extends AST {
-  left: Var;
-  token: Token;
-  right: AST;
-  constructor(left: Var, op: Token, right: AST) {
-    super();
-    this.left = left;
-    this.token = op;
-    this.right = right;
-  }
-}
-export class Var extends AST {
-  token: Token;
-  value: ValueType;
-  constructor(token: Token) {
-    super();
-    this.token = token;
-    this.value = token.value
-  }
-}
-export class NoOp extends AST { }
-export class Program extends AST {
-  name: string;
-  block: Block;
-  constructor(name: string, block: Block) {
-    super();
-    this.name = name;
-    this.block = block;
-  } 
-}
-export class Block extends AST {
-  declarations: [VarDecl];
-  compoundStatement: Compound;
-  constructor(declaration, compoundStatement: Compound) {
-    super();
-    this.declarations = declaration;
-    this.compoundStatement = compoundStatement;
-  }
-}
-export class VarDecl extends AST {
-  varNode: Var;
-  typeNode: Type;
-  constructor(varNode: Var, typeNode: Type) {
-    super();
-    this.varNode = varNode;
-    this.typeNode = typeNode;
-  }
-}
-export class Type extends AST {
-  token: Token;
-  constructor(token: Token) {
-    super();
-    this.token = token;
-  }
-}
 export class Lexer {
   private text: string;
   private pos: number;
@@ -122,6 +29,7 @@ export class Lexer {
     DIV: new Token('INTEGER_DIV', 'DIV'),
     INTEGER: new Token('INTEGER', 'INTEGER'),
     REAL: new Token('REAL', 'REAL'),
+    PROCEDURE: new Token('PROCEDURE', 'PROCEDURE'),
 }
   constructor(text: string) {
     this.text = text;
@@ -263,6 +171,109 @@ export class Lexer {
     return new Token('EOF', null);
   }
 }
+export abstract class AST { }
+export class BinOp extends AST {
+  public left: AST;
+  public op: Token;
+  public right: AST
+  constructor(left: AST, op: Token, right: AST) {
+    super()
+    this.left = left;
+    this.op = op;
+    this.right = right;
+  }
+}
+export class UnaryOp extends AST {
+  token: Token;
+  op: Token;
+  expr: AST
+  constructor(op: Token, expr: AST) {
+    super();
+    this.token = op;
+    this.op = op;
+    this.expr = expr;
+  }
+}
+export class Num extends AST {
+  public token: Token;
+  public value: ValueType;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+    this.value = token.value;
+  }
+}
+export class Compound extends AST {
+  children = [];
+  constructor() {
+    super();
+  }
+}
+export class Assign extends AST {
+  left: Var;
+  token: Token;
+  right: AST;
+  constructor(left: Var, op: Token, right: AST) {
+    super();
+    this.left = left;
+    this.token = op;
+    this.right = right;
+  }
+}
+export class Var extends AST {
+  token: Token;
+  value: ValueType;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+    this.value = token.value
+  }
+}
+export class NoOp extends AST { }
+export class Program extends AST {
+  name: string;
+  block: Block;
+  constructor(name: string, block: Block) {
+    super();
+    this.name = name;
+    this.block = block;
+  } 
+}
+export class Block extends AST {
+  declarations: [VarDecl];
+  compoundStatement: Compound;
+  constructor(declaration, compoundStatement: Compound) {
+    super();
+    this.declarations = declaration;
+    this.compoundStatement = compoundStatement;
+  }
+}
+export class VarDecl extends AST {
+  varNode: Var;
+  typeNode: Type;
+  constructor(varNode: Var, typeNode: Type) {
+    super();
+    this.varNode = varNode;
+    this.typeNode = typeNode;
+  }
+}
+export class Type extends AST {
+  token: Token;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+  }
+}
+export class ProcedureDecl extends AST {
+  procName: string;
+  blockNode: Block
+  constructor(procName: string, blockNode: Block) {
+    super();
+    this.procName = procName;
+    this.blockNode = blockNode;
+  }
+  
+}
 export class Parser {
   public lexer: Lexer
   public currentToken: Token;
@@ -391,20 +402,30 @@ export class Parser {
     return programNode;
   }
   block() {
-    const declarationNode = this.declaration();
+    const declarationNode = this.declarations();
     const compoundStatementNode = this.compoundStatement();
     return new Block(declarationNode, compoundStatementNode);
   }
-  declaration() {
+  declarations() {
     const declarations = [];
     if (this.currentToken.type === 'VAR') {
       this.eat('VAR');
       // @ts-ignore
       while (this.currentToken.type === 'ID') {
         const varDecl = this.variableDeclaration()
-        declarations.push(varDecl);
+        declarations.push(...varDecl);
         this.eat('SEMI');
       }
+    }
+    while (this.currentToken.type === 'PROCEDURE') {
+      this.eat('PROCEDURE');
+      const procName = this.currentToken.value as string;
+      this.eat('ID');
+      this.eat('SEMI');
+      const blockNode = this.block();
+      const procDecl = new ProcedureDecl(procName, blockNode);
+      declarations.push(procDecl);
+      this.eat('SEMI');
     }
     return declarations;
   }
@@ -430,6 +451,7 @@ export class Parser {
     }
     return new Type(token);
   }
+  // decl
   parse() {
     const node = this.program();
     if (this.currentToken.type != 'EOF') {
@@ -485,6 +507,7 @@ export class Interpreter {
   }
   private visitVarDecl(node: VarDecl) {}
   private visitType(node: Type) {}
+  private visitProcedureDecl(node: ProcedureDecl) {}
   private visitVar(node: Var) {
     const varName = node.value;
     const value = this.GLOBAL_SCOPE[varName];
@@ -517,6 +540,8 @@ export class Interpreter {
       return this.visitVarDecl(node)
     if (node instanceof Type)
       return this.visitType(node)
+    if (node instanceof ProcedureDecl)
+      return this.visitProcedureDecl(node)
   }
   interpret() {
     const tree = this.parser.parse();
@@ -526,16 +551,29 @@ export class Interpreter {
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  PROGRAM Part10AST;
+  PROGRAM Part12;
   VAR
-     a, b : INTEGER;
-     y    : REAL;
+     a : INTEGER;
   
-  BEGIN {Part10AST}
-     a := 2;
-     b := 10 * a + 10 * a DIV 4;
-     y := 20 / 7 + 3.14;
-  END.  {Part10AST}`;
+  PROCEDURE P1;
+  VAR
+     a : REAL;
+     k : INTEGER;
+  
+     PROCEDURE P2;
+     VAR
+        a, z : INTEGER;
+     BEGIN {P2}
+        z := 777;
+     END;  {P2}
+  
+  BEGIN {P1}
+  
+  END;  {P1}
+  
+  BEGIN {Part12}
+     a := 10;
+  END.  {Part12}`;
   const lexer = new Lexer(text);
 
   // let tmp = lexer.getNextToken();
