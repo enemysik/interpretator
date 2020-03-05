@@ -1,4 +1,4 @@
-export type TokenType = 'EOF' | 'Integer' | 'Plus' | 'Minus'
+export type TokenType = 'EOF' | 'Integer' | 'Plus' | 'Minus' | 'Div' | 'Mul'
 export type ValueType = string | number;
 
 export class Token {
@@ -61,6 +61,16 @@ export class Lexer {
         this.advance()
         return new Token('Minus', '-')
       }
+
+      if (/\*/.test(this.currentChar)) {
+        this.advance()
+        return new Token('Mul', '*')
+      }
+
+      if (/\//.test(this.currentChar)) {
+        this.advance()
+        return new Token('Div', '/')
+      }
       this.error();
     }
     return new Token('EOF', null);
@@ -71,8 +81,8 @@ export class Interpreter {
   public lexer: Lexer
   public currentToken: Token;
   constructor(lexer: Lexer) {
-    this.currentToken = null;
     this.lexer = lexer;
+    this.currentToken = this.lexer.getNextToken();
   }
   error() {
     throw new Error('Invalid syntax');
@@ -83,14 +93,28 @@ export class Interpreter {
     else
     this.error();
   }
-  term() {
+  factor() {
     const token = this.currentToken;
     this.eat('Integer');
     return token.value;
   }
+  term() {
+    let result = this.factor() as number;
+    while ((['Div', 'Mul'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
+      const token = this.currentToken;
+      if (token.type === 'Mul') {
+        this.eat('Mul');
+        result *= this.term() as number;
+      } else if (token.type === 'Div') {
+        this.eat('Div');
+        result /= this.term() as number;
+      }
+    }
+    return result;
+  }
   expr() {
     let result = this.term() as number;
-    while (['Minus', 'Plus'].indexOf(this.currentToken.type) !== -1) {
+    while ((['Minus', 'Plus'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
       if (token.type === 'Minus') {
         this.eat('Minus');
@@ -104,7 +128,7 @@ export class Interpreter {
   }
 }
 function main() {
-  const text = '54  -3';
+  const text = '5 + 7 * 2 - 3';
   const lexer = new Lexer(text);
   const interpreter = new Interpreter(lexer);
   const result = interpreter.expr();
