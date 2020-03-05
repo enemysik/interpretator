@@ -1,7 +1,8 @@
-export type BinOpsType = 'Plus' | 'Minus' | 'Div' | 'Mul';
-export type PascalKeywordsType = 'BEGIN' | 'END';
-export type TokenType = BinOpsType | PascalKeywordsType | 'EOF' | 'Integer' | 'LParen' | 'RParen'
-| 'ASSIGN' | 'SEMI' | 'DOT' | 'ID';
+export type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'INTEGER_DIV' |'FLOAT_DIV';
+export type PascalKeywordsType = 'BEGIN' | 'END' | 'PROGRAM'| 'VAR'| 'INTEGER_DIV'| 'INTEGER'| 'REAL';
+export type TokenType = BinOpsType | PascalKeywordsType | SyntaxType | 'EOF' | 'ASSIGN' | 'SEMI' | 'DOT' | 'ID' | 'INTEGER_CONST' |'REAL_CONST';
+export type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen';
+
 export type ValueType = string | number;
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
@@ -75,6 +76,40 @@ export class Var extends AST {
   }
 }
 export class NoOp extends AST { }
+export class Program extends AST {
+  name: string;
+  block: Block;
+  constructor(name: string, block: Block) {
+    super();
+    this.name = name;
+    this.block = block;
+  } 
+}
+export class Block extends AST {
+  declarations: [VarDecl];
+  compoundStatement: Compound;
+  constructor(declaration, compoundStatement: Compound) {
+    super();
+    this.declarations = declaration;
+    this.compoundStatement = compoundStatement;
+  }
+}
+export class VarDecl extends AST {
+  varNode: Var;
+  typeNode: Type;
+  constructor(varNode: Var, typeNode: Type) {
+    super();
+    this.varNode = varNode;
+    this.typeNode = typeNode;
+  }
+}
+export class Type extends AST {
+  token: Token;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+  }
+}
 export class Lexer {
   private text: string;
   private pos: number;
@@ -82,6 +117,11 @@ export class Lexer {
   private static RESERVED_KEYWORDS = {
     BEGIN: new Token('BEGIN', 'BEGIN'),
     END: new Token('END', 'END'),
+    PROGRAM: new Token('PROGRAM', 'PROGRAM'),
+    VAR: new Token('VAR', 'VAR'),
+    DIV: new Token('INTEGER_DIV', 'DIV'),
+    INTEGER: new Token('INTEGER', 'INTEGER'),
+    REAL: new Token('REAL', 'REAL'),
 }
   constructor(text: string) {
     this.text = text;
@@ -105,6 +145,12 @@ export class Lexer {
     const token = Lexer.RESERVED_KEYWORDS[result] || new Token('ID', result);
     return token;
   }
+  private skipComment() {
+    while (!/\}/.test(this.currentChar)) {
+      this.advance();
+    }
+    this.advance();
+  }
   private error() {
     throw new Error('Invalid character');
   }
@@ -120,18 +166,35 @@ export class Lexer {
       (this.currentChar === ' ' || this.currentChar === '\n'))
       this.advance();
   }
-  private integer() {
+  private number() {
     let result = '';
     while (this.currentChar != null && /\d/.test(this.currentChar)) {
       result += this.currentChar;
       this.advance();
     }
-    return Number(result);
+    if (/\./.test(this.currentChar)) {
+      result += this.currentChar;
+      this.advance();
+      while (this.currentChar != null && /\d/.test(this.currentChar)) {
+        result +=this.currentChar;
+        this.advance();
+      }
+      return new Token('REAL_CONST', result);
+    } else {
+      return new Token('INTEGER_CONST', result);
+    }
   }
   getNextToken() {
     while (this.currentChar != null) {
-      if (this.currentChar === ' ' || this.currentChar === '\n')
+      if (this.currentChar === ' ' || this.currentChar === '\n') {
         this.skipWhiteSpace();
+        continue;
+      }
+      if (/\{/.test(this.currentChar)) {
+        this.advance();
+        this.skipComment();
+        continue;
+      }
       if (WORD_REGEXP.test(this.currentChar)) {
         return this._id();
       }
@@ -140,6 +203,16 @@ export class Lexer {
         this.advance();
         this.advance();
         return new Token('ASSIGN', ':=');
+      }
+
+      if (/\:/.test(this.currentChar)) {
+        this.advance();
+        return new Token('COLON', ':');
+      }
+
+      if (/\,/.test(this.currentChar)) {
+        this.advance();
+        return new Token('COMMA', ',');
       }
 
       if (/\;/.test(this.currentChar)) {
@@ -153,7 +226,7 @@ export class Lexer {
       }
 
       if (/\d/.test(this.currentChar))
-        return new Token('Integer', this.integer())
+        return this.number();
 
       if (/\+/.test(this.currentChar)) {
         this.advance()
@@ -172,7 +245,7 @@ export class Lexer {
 
       if (/\//.test(this.currentChar)) {
         this.advance()
-        return new Token('Div', '/')
+        return new Token('FLOAT_DIV', '/')
       }
 
       if (/\(/.test(this.currentChar)) {
@@ -216,26 +289,32 @@ export class Parser {
       this.eat('Plus');
       return new UnaryOp(token, this.factor());
     }
-    if (token.type === 'Integer') {
-      this.eat('Integer');
+    if (token.type === 'INTEGER_CONST') {
+      this.eat('INTEGER_CONST');
       return new Num(token);
-    } else if (token.type === 'LParen') {
+    }
+    if (token.type === 'REAL_CONST') {
+      this.eat('REAL_CONST');
+      return new Num(token);
+    }
+    if (token.type === 'LParen') {
       this.eat('LParen');
       const node = this.expr();
       this.eat('RParen');
       return node;
-    } else {
-      return this.variable();
     }
+    return this.variable();
   }
   term(): AST {
     let node = this.factor();
-    while ((['Div', 'Mul'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
+    while ((['INTEGER_DIV', 'FLOAT_DIV', 'Mul'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
       if (token.type === 'Mul') {
         this.eat('Mul');
-      } else if (token.type === 'Div') {
-        this.eat('Div');
+      } else if (token.type === 'INTEGER_DIV') {
+        this.eat('INTEGER_DIV');
+      } if (token.type === 'FLOAT_DIV') {
+        this.eat('FLOAT_DIV')
       }
       node = new BinOp(node, token, this.factor());
     }
@@ -302,9 +381,54 @@ export class Parser {
     return root;
   }
   program() {
-    const node = this.compoundStatement();
+    this.eat('PROGRAM');
+    const varNode = this.variable();
+    const progName = varNode.value as string;
+    this.eat('SEMI');
+    const blockNode = this.block();
+    const programNode = new Program(progName, blockNode);
     this.eat('DOT');
-    return node;
+    return programNode;
+  }
+  block() {
+    const declarationNode = this.declaration();
+    const compoundStatementNode = this.compoundStatement();
+    return new Block(declarationNode, compoundStatementNode);
+  }
+  declaration() {
+    const declarations = [];
+    if (this.currentToken.type === 'VAR') {
+      this.eat('VAR');
+      // @ts-ignore
+      while (this.currentToken.type === 'ID') {
+        const varDecl = this.variableDeclaration()
+        declarations.push(varDecl);
+        this.eat('SEMI');
+      }
+    }
+    return declarations;
+  }
+  variableDeclaration() {
+    const varNodes = [new Var(this.currentToken)];
+    this.eat('ID');
+    while (this.currentToken.type === 'COMMA') {
+      this.eat('COMMA');
+      varNodes.push(new Var(this.currentToken));
+      this.eat('ID');
+    }
+    this.eat('COLON');
+
+    const typeNode = this.typeSpec();
+    return [varNodes.map(varNode => new VarDecl(varNode, typeNode))];
+  }
+  typeSpec() {
+    const token = this.currentToken;
+    if (this.currentToken.type === 'INTEGER') {
+      this.eat('INTEGER');
+    } else {
+      this.eat('REAL');
+    }
+    return new Type(token);
   }
   parse() {
     const node = this.program();
@@ -327,8 +451,10 @@ export class Interpreter {
       return this.visit(node.left) - this.visit(node.right);
     if (node.op.type === 'Mul')
       return this.visit(node.left) * this.visit(node.right);
-    if (node.op.type === 'Div')
+    if (node.op.type === 'FLOAT_DIV')
       return this.visit(node.left) / this.visit(node.right);
+    if (node.op.type === 'INTEGER_DIV')
+      return Math.trunc(this.visit(node.left) / this.visit(node.right));
   }
   private visitUnaryOp(node: UnaryOp) {
     const op = node.op.type;
@@ -348,6 +474,17 @@ export class Interpreter {
     const varName = node.left.value;
     this.GLOBAL_SCOPE[varName] = this.visit(node.right);
   }
+  private visitProgram(node: Program) {
+    return this.visit(node.block);
+  }
+  private visitBlock(node: Block) {
+    node.declarations.forEach(declaration => {
+      this.visit(declaration);
+    });
+    this.visit(node.compoundStatement);
+  }
+  private visitVarDecl(node: VarDecl) {}
+  private visitType(node: Type) {}
   private visitVar(node: Var) {
     const varName = node.value;
     const value = this.GLOBAL_SCOPE[varName];
@@ -372,6 +509,14 @@ export class Interpreter {
       return this.visitVar(node)
     if (node instanceof Compound)
       return this.visitCompound(node)
+    if (node instanceof Program)
+      return this.visitProgram(node)
+    if (node instanceof Block)
+      return this.visitBlock(node)
+    if (node instanceof VarDecl)
+      return this.visitVarDecl(node)
+    if (node instanceof Type)
+      return this.visitType(node)
   }
   interpret() {
     const tree = this.parser.parse();
@@ -381,27 +526,28 @@ export class Interpreter {
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-BEGIN
-  BEGIN
-      number := МТабл();
-      a := number;
-      b := 10 * a + 10 * number / 4;
-      c := a - - b
-  END;
-  x := 11;
-END.`;
+  PROGRAM Part10AST;
+  VAR
+     a, b : INTEGER;
+     y    : REAL;
+  
+  BEGIN {Part10AST}
+     a := 2;
+     b := 10 * a + 10 * a DIV 4;
+     y := 20 / 7 + 3.14;
+  END.  {Part10AST}`;
   const lexer = new Lexer(text);
 
-  let tmp = lexer.getNextToken();
-  do {
-    console.log(tmp);
-    tmp = lexer.getNextToken();
-  } while (tmp.type !== 'EOF')
+  // let tmp = lexer.getNextToken();
+  // do {
+  //   console.log(tmp);
+  //   tmp = lexer.getNextToken();
+  // } while (tmp.type !== 'EOF')
   
-  // const parser = new Parser(lexer);
-  // const interpreter = new Interpreter(parser);
-  // interpreter.interpret();
-  // console.log(interpreter.GLOBAL_SCOPE);
+  const parser = new Parser(lexer);
+  const interpreter = new Interpreter(parser);
+  interpreter.interpret();
+  console.log(interpreter.GLOBAL_SCOPE);
 }
 try {
   main();
