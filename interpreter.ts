@@ -1,4 +1,4 @@
-export type TokenType = 'EOF' | 'Integer' | 'Plus' | 'Minus' | 'Div' | 'Mul'
+export type TokenType = 'EOF' | 'Integer' | 'Plus' | 'Minus' | 'Div' | 'Mul' | 'LParen' | 'RParen'
 export type ValueType = string | number;
 
 export class Token {
@@ -71,6 +71,17 @@ export class Lexer {
         this.advance()
         return new Token('Div', '/')
       }
+
+      if (/\(/.test(this.currentChar)) {
+        this.advance()
+        return new Token('LParen', '(')
+      }
+
+      if (/\)/.test(this.currentChar)) {
+        this.advance()
+        return new Token('RParen', ')')
+      }
+
       this.error();
     }
     return new Token('EOF', null);
@@ -91,12 +102,19 @@ export class Interpreter {
     if (this.currentToken.type === tokenType)
       this.currentToken = this.lexer.getNextToken();
     else
-    this.error();
+      this.error();
   }
   factor() {
     const token = this.currentToken;
-    this.eat('Integer');
-    return token.value;
+    if (token.type === 'Integer') {
+      this.eat('Integer');
+      return token.value;
+    } else if (token.type === 'LParen') {
+      this.eat('LParen');
+      const result = this.expr();
+      this.eat('RParen');
+      return result;
+    }
   }
   term() {
     let result = this.factor() as number;
@@ -128,7 +146,7 @@ export class Interpreter {
   }
 }
 function main() {
-  const text = '5 + 7 * 2 - 3';
+  const text = '5 + 7 * (2 - 3)';
   const lexer = new Lexer(text);
   const interpreter = new Interpreter(lexer);
   const result = interpreter.expr();
