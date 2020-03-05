@@ -73,25 +73,24 @@ export class Interpreter {
     else
     this.error();
   }
+  term() {
+    const token = this.currentToken;
+    this.eat('Integer');
+    return token.value;
+  }
   expr() {
     this.currentToken = this.getNextToken();
-    const left = this.currentToken;
-    this.eat('Integer');
-
-    const op = this.currentToken;
-    if (op.type === 'Minus')
-      this.eat('Minus');
-    else
-      this.eat('Plus');
-
-    const right = this.currentToken;
-    this.eat('Integer');
-    
-    let result;
-    if (op.type === 'Minus')
-      result = (left.value as number) - (right.value as number);
-    else
-      result = (left.value as number) + (right.value as number);
+    let result = this.term() as number;
+    while (['Minus', 'Plus'].indexOf(this.currentToken.type) !== -1) {
+      const token = this.currentToken;
+      if (token.type === 'Minus') {
+        this.eat('Minus');
+        result += this.term() as number;
+      } else if (token.type === 'Plus') {
+        this.eat('Plus');
+        result -= this.term() as number;
+      }
+    }
     return result;
   }
 }
