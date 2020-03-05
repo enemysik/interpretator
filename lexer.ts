@@ -1,8 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Token} from './token';
 
-// export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\s)/;
-export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,)/;
+export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
 type TokensObject = {
@@ -29,23 +28,39 @@ export class Lexer {
       return this.text[peekPosition];
     }
   }
+  private peekWord() {
+    let result = '';
+    let peekPosition = this.pos;
+    while (this.text[peekPosition] != null &&
+      WORD_OR_DIGIT_REGEXP.test(this.text[peekPosition]) &&
+      !/\s/.test(this.text[peekPosition])) {
+      result += this.text[peekPosition];
+      peekPosition++;
+    }
+    return result;
+  }
   private _id() {
     let result = '';
     while (this.currentChar != null &&
-      WORD_OR_DIGIT_REGEXP.test(this.currentChar)) {
-      result += this.currentChar;
-      this.advance();
+       WORD_OR_DIGIT_REGEXP.test(this.currentChar)) {
+      const peekedWord = this.peekWord();
+      if (Lexer.RESERVED_KEYWORDS[peekedWord] !== undefined) {
+        if (result === '') {
+          this.advance(peekedWord.length);
+          return Lexer.RESERVED_KEYWORDS[peekedWord];
+        } else {
+          break;
+        }
+      } else {
+        if (result !== '') {
+          result += ' ';
+          this.advance();
+        }
+        this.advance(peekedWord.length);
+        result += peekedWord;
+      }
     }
-    // result = result.trim();
-    // if (/\s/.test(result)) {
-    //   const reserved = Object.keys(Lexer.RESERVED_KEYWORDS);
-    //   const arr = result.split(' ');
-    //   const tmp = arr.filter((v) => reserved.indexOf(v) !== -1);
-    //   if (tmp.length > 0) {
-    //     throw new Error('Invalid character. ' +
-    //      `Cannon use words ${tmp} as part of variable name`);
-    //   }
-    // }
+    result = result.trim();
     const token = Lexer.RESERVED_KEYWORDS[result] || new Token('ID', result);
     return token;
   }
@@ -58,8 +73,8 @@ export class Lexer {
   private error() {
     throw new Error('Invalid character');
   }
-  private advance() {
-    this.pos++;
+  private advance(length = 1) {
+    this.pos += length;
     if (this.pos > this.text.length - 1) {
       this.currentChar = null;
     } else {
