@@ -6,8 +6,8 @@ import {Interpreter} from './interpreter';
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  Ар и_фметика="test;test2"
-  {test1 = 10e2}
+  Наличие_смолы и_пыли="test;test2"
+  D1.контрольного раствора= 10e2
   {C=5}
   {X=(10*C*(1+0,0012*(Tx-15)))}
   F= 3 <> C И C > 4

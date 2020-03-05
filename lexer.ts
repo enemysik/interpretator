@@ -52,12 +52,12 @@ export class Lexer {
           break;
         }
       } else {
-        if (result !== '') {
+        this.advance(peekedWord.length);
+        result += peekedWord;
+        if (this.currentChar === ' ') {
           result += ' ';
           this.advance();
         }
-        this.advance(peekedWord.length);
-        result += peekedWord;
       }
     }
     result = result.trim();
