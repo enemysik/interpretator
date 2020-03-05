@@ -24,6 +24,17 @@ export class BinOp extends AST {
     this.right = right;
   }
 }
+export class UnaryOp extends AST {
+  token: Token;
+  op: Token;
+  expr: AST
+  constructor(op: Token, expr: AST) {
+    super();
+    this.token = op;
+    this.op = op;
+    this.expr = expr;
+  }
+}
 export class Num extends AST {
   public token: Token;
   public value: ValueType;
@@ -125,6 +136,14 @@ export class Parser {
   }
   factor(): AST {
     const token = this.currentToken;
+    if (token.type === 'Minus') {
+      this.eat('Minus');
+      return new UnaryOp(token, this.factor());
+    }
+    if (token.type === 'Plus') {
+      this.eat('Plus');
+      return new UnaryOp(token, this.factor());
+    }
     if (token.type === 'Integer') {
       this.eat('Integer');
       return new Num(token);
@@ -180,12 +199,21 @@ export class Interpreter {
     if (node.op.type === 'Div')
       return this.visit(node.left) / this.visit(node.right);
   }
+  visitUnaryOp(node: UnaryOp) {
+    const op = node.op.type;
+    if (op === 'Plus')
+      return +this.visit(node.expr);
+    if (op === 'Minus')
+      return -this.visit(node.expr);
+  }
   visitNum(node: Num) {
     return node.value;
   }
   visit(node: AST) {
     if (node instanceof BinOp)
       return this.visitBinOp(node)
+    if (node instanceof UnaryOp)
+      return this.visitUnaryOp(node)
     if (node instanceof Num)
       return this.visitNum(node)
   }
@@ -195,7 +223,7 @@ export class Interpreter {
   }
 }
 function main() {
-  const text = '5 + 7 * (2 - 3)';
+  const text = '5 - - - + - (3 + 4) - +2';
   const lexer = new Lexer(text);
   const parser = new Parser(lexer);
   const interpreter = new Interpreter(parser);
