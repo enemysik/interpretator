@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Parser, BinOp, UnaryOp, Num, Compound,
   NoOp, Assign, Program, Block, VarDecl, Type,
-  ProcedureDecl, FunctionCall, Var, AST} from './parser';
+  ProcedureDecl, FunctionCall, Var, AST, Str, Arr} from './parser';
 import {ValueType} from './token';
 
 type Scope = {
@@ -82,6 +82,12 @@ export class Interpreter {
       return value;
     }
   }
+  private visitStr(node: Str) {
+    return node.value;
+  }
+  private visitArr(node: Arr) {
+    return node.array;
+  }
   private visit(node: AST): any {
     if (node instanceof BinOp) {
       return this.visitBinOp(node);
@@ -121,6 +127,12 @@ export class Interpreter {
     }
     if (node instanceof FunctionCall) {
       return this.visitFunctionCall(node);
+    }
+    if (node instanceof Str) {
+      return this.visitStr(node);
+    }
+    if (node instanceof Arr) {
+      return this.visitArr(node);
     }
   }
   interpret() {

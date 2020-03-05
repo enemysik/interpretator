@@ -115,6 +115,24 @@ export class FunctionCall extends AST {
     this.token = token;
   }
 }
+export class Str extends AST {
+  token: Token;
+  value: string;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+    this.value = token.value as string;
+  }
+}
+export class Arr extends AST {
+  token: Token;
+  array: string[];
+  constructor(token: Token, array: string[]) {
+    super();
+    this.token = token;
+    this.array = array;
+  }
+}
 export class Parser {
   public lexer: Lexer
   public currentToken: Token;
@@ -150,6 +168,15 @@ export class Parser {
     if (token.type === 'REAL_CONST') {
       this.eat('REAL_CONST');
       return new Num(token);
+    }
+    if (token.type === 'STRING_CONST') {
+      this.eat('STRING_CONST');
+      return new Str(token);
+    }
+    if (token.type === 'ARRAY_CONST') {
+      this.eat('ARRAY_CONST');
+      // TODO mb change splitting to tokens flow
+      return new Arr(token, (token.value as string).split(';'));
     }
     if (token.type === 'LParen') {
       this.eat('LParen');
@@ -209,9 +236,6 @@ export class Parser {
     return node;
   }
   private statement() {
-    // if (this.currentToken.type === 'BEGIN') {
-    //   return this.compoundStatement();
-    // }
     if (this.currentToken.type === 'ID') {
       if (this.lexer.currentChar === '(') {
         return this.functionCallStatement();
@@ -223,10 +247,6 @@ export class Parser {
   private statementList() {
     const node = this.statement();
     const results = [node];
-    // while (this.currentToken.type === 'SEMI') { // TODO change SEMI to \n
-    //   this.eat('SEMI');
-    //   results.push(this.statement());
-    // }
     while (this.currentToken.type === 'ENTER') {
       this.eat('ENTER');
       results.push(this.statement());
@@ -245,39 +265,10 @@ export class Parser {
     return root;
   }
   private program() {
-    // const blockNode = this.block();
-    // const programNode = new Program('', blockNode);
     const programNode = this.compoundStatement();
     this.eat('EOF');
     return programNode;
   }
-  // private block() {
-  //   const declarationNode: VarDecl[] = [];
-  //   const compoundStatementNode = this.compoundStatement();
-  //   return new Block(declarationNode, compoundStatementNode);
-  // }
-  // private variableDeclaration() {
-  //   const varNodes = [new Var(this.currentToken)];
-  //   this.eat('ID');
-  //   while (this.currentToken.type === 'COMMA') {
-  //     this.eat('COMMA');
-  //     varNodes.push(new Var(this.currentToken));
-  //     this.eat('ID');
-  //   }
-  //   this.eat('COLON');
-
-  //   const typeNode = this.typeSpec();
-  //   return [varNodes.map((varNode) => new VarDecl(varNode, typeNode))];
-  // }
-  // private typeSpec() {
-  //   const token = this.currentToken;
-  //   if (this.currentToken.type === 'INTEGER') {
-  //     this.eat('INTEGER');
-  //   } else {
-  //     this.eat('REAL');
-  //   }
-  //   return new Type(token);
-  // }
   private functionCallStatement() {
     const token = this.currentToken;
     const funcName = token.value as string;
@@ -288,12 +279,6 @@ export class Parser {
       const node = this.expr();
       actualParams.push(node);
     }
-    // there cannot be COMMA
-    // while (this.currentToken.type === 'COMMA') {
-    //   this.eat('COMMA');
-    //   const node = this.expr();
-    //   actualParams.push(node);
-    // }
     while (this.currentToken.type === 'PIPE') {
       this.eat('PIPE');
       const node = this.expr();

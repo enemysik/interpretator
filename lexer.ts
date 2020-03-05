@@ -76,6 +76,24 @@ export class Lexer {
       return new Token('INTEGER_CONST', result);
     }
   }
+  string() {
+    let result = '';
+    this.advance();
+    while (this.currentChar != null && !(/\"/.test(this.currentChar))) {
+      result += this.currentChar;
+      this.advance();
+    }
+    this.advance();
+    let editable = false; // TODO find where i should it use
+    if (this.currentChar != null && /\+/.test(this.currentChar)) {
+      editable = true;
+    }
+    if (/\;/.test(result)) {
+      return new Token('ARRAY_CONST', result);
+    } else {
+      return new Token('STRING_CONST', result);
+    }
+  }
   getNextToken() {
     while (this.currentChar != null) {
       if (this.currentChar === ' ') {
@@ -89,6 +107,9 @@ export class Lexer {
       }
       if (WORD_REGEXP.test(this.currentChar)) {
         return this._id();
+      }
+      if (/\"/.test(this.currentChar)) {
+        return this.string();
       }
 
       if (/\=/.test(this.currentChar)) {
