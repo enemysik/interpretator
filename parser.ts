@@ -14,6 +14,17 @@ export class BinOp extends AST {
     this.right = right;
   }
 }
+export class BoolOp extends AST {
+  public left: AST;
+  public op: Token;
+  public right: AST
+  constructor(left: AST, op: Token, right: AST) {
+    super();
+    this.left = left;
+    this.op = op;
+    this.right = right;
+  }
+}
 export class UnaryOp extends AST {
   token: Token;
   op: Token;
@@ -151,6 +162,11 @@ export class Parser {
       this.error();
     }
   }
+  private variable() {
+    const node = new Var(this.currentToken);
+    this.eat('ID');
+    return node;
+  }
   private factor(): AST {
     const token = this.currentToken;
     if (token.type === 'Minus') {
@@ -189,17 +205,17 @@ export class Parser {
     }
     return this.variable();
   }
-  private sword() {
+  private caret() {
     let node = this.factor();
-    while ((['CARET'] as TokenType[]).indexOf(this.currentToken.type) !== -1) {
+    while (this.currentToken.type === 'CARET') {
       const token = this.currentToken;
       this.eat('CARET');
       node = new BinOp(node, token, this.factor());
     }
     return node;
   }
-  private term(): AST {
-    let node = this.sword();
+  private divMul(): AST {
+    let node = this.caret();
     while ((['FLOAT_DIV', 'Mul'] as TokenType[])
         .indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
@@ -209,12 +225,12 @@ export class Parser {
       if (token.type === 'FLOAT_DIV') {
         this.eat('FLOAT_DIV');
       }
-      node = new BinOp(node, token, this.sword());
+      node = new BinOp(node, token, this.caret());
     }
     return node;
   }
-  private expr(): AST {
-    let node = this.term();
+  private subAdd(): AST {
+    let node = this.divMul();
     while ((['Minus', 'Plus'] as TokenType[])
         .indexOf(this.currentToken.type) !== -1) {
       const token = this.currentToken;
@@ -223,17 +239,69 @@ export class Parser {
       } else if (token.type === 'Plus') {
         this.eat('Plus');
       }
-      node = new BinOp(node, token, this.term());
+      node = new BinOp(node, token, this.divMul());
     }
     return node;
   }
+  private conditions() {
+    let node = this.subAdd();
+    while ((['MORE', 'MORE_OR_EQUAL', 'LESS', 'LESS_OR_EQUAL'] as TokenType[])
+        .indexOf(this.currentToken.type) !== -1) {
+      const token = this.currentToken;
+      if (token.type === 'MORE') {
+        this.eat('MORE');
+      }
+      if (token.type === 'LESS') {
+        this.eat('LESS');
+      }
+      if (token.type === 'MORE_OR_EQUAL') {
+        this.eat('MORE_OR_EQUAL');
+      }
+      if (token.type === 'LESS_OR_EQUAL') {
+        this.eat('LESS_OR_EQUAL');
+      }
+      node = new BoolOp(node, token, this.subAdd());
+    }
+    return node;
+  }
+  private equivalent() {
+    let node = this.conditions();
+    while ((['EQUAL', 'NOT_EQUAL'] as TokenType[])
+        .indexOf(this.currentToken.type) !== -1) {
+      const token = this.currentToken;
+      if (token.type === 'EQUAL') {
+        this.eat('EQUAL');
+      }
+      if (token.type === 'NOT_EQUAL') {
+        this.eat('NOT_EQUAL');
+      }
+      node = new BoolOp(node, token, this.conditions());
+    }
+    return node;
+  }
+  private and() {
+    let node = this.equivalent();
+    while (this.currentToken.type === 'AND') {
+      const token = this.currentToken;
+      this.eat('AND');
+      node = new BoolOp(node, token, this.equivalent());
+    }
+    return node;
+  }
+  private or() {
+    let node = this.and();
+    while (this.currentToken.type === 'OR') {
+      const token = this.currentToken;
+      this.eat('OR');
+      node = new BoolOp(node, token, this.and());
+    }
+    return node;
+  }
+  private expr() {
+    return this.or();
+  }
   private empty() {
     return new NoOp();
-  }
-  private variable() {
-    const node = new Var(this.currentToken);
-    this.eat('ID');
-    return node;
   }
   private assignmentStatement() {
     const left = this.variable();
@@ -242,6 +310,29 @@ export class Parser {
     const right = this.expr();
     const node = new Assign(left, token, right);
     return node;
+  }
+  private functionCallStatement() {
+    const token = this.currentToken;
+    const funcName = token.value as string;
+    this.eat('ID');
+    this.eat('LParen');
+    const actualParams = [];
+    if (this.currentToken.type !== 'RParen') {
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    while (this.currentToken.type === 'PIPE') {
+      this.eat('PIPE');
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    while (this.currentToken.type === 'SEMI') {
+      this.eat('SEMI');
+      const node = this.expr();
+      actualParams.push(node);
+    }
+    this.eat('RParen');
+    return new FunctionCall(funcName, actualParams, token);
   }
   private statement() {
     if (this.currentToken.type === 'ID') {
@@ -276,29 +367,6 @@ export class Parser {
     const programNode = this.compoundStatement();
     this.eat('EOF');
     return programNode;
-  }
-  private functionCallStatement() {
-    const token = this.currentToken;
-    const funcName = token.value as string;
-    this.eat('ID');
-    this.eat('LParen');
-    const actualParams = [];
-    if (this.currentToken.type !== 'RParen') {
-      const node = this.expr();
-      actualParams.push(node);
-    }
-    while (this.currentToken.type === 'PIPE') {
-      this.eat('PIPE');
-      const node = this.expr();
-      actualParams.push(node);
-    }
-    while (this.currentToken.type === 'SEMI') {
-      this.eat('SEMI');
-      const node = this.expr();
-      actualParams.push(node);
-    }
-    this.eat('RParen');
-    return new FunctionCall(funcName, actualParams, token);
   }
   parse() {
     const node = this.program();

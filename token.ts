@@ -5,7 +5,7 @@ type VariableType = 'INTEGER_CONST' |'REAL_CONST' | 'STRING_CONST' |
 type SyntaxType = 'LParen' | 'RParen' | 'PIPE' |
   'SEMI' | 'ENTER' | 'CARET';
 type BooleanType = 'EQUAL' | 'NOT_EQUAL' | 'MORE' | 'LESS' |
-  'MORE_OR_EQUAL' | 'LESS_OR_EQUAL';
+  'MORE_OR_EQUAL' | 'LESS_OR_EQUAL' | 'OR' | 'AND';
 export type TokenType = BinOpsType | SyntaxType | VariableType | BooleanType |
   'EOF' | 'ASSIGN' | 'ID';
 

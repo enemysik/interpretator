@@ -1,7 +1,8 @@
 /* eslint-disable require-jsdoc */
 import {Token} from './token';
 
-export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\s)/;
+// export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\s)/;
+export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
 type TokensObject = {
@@ -12,6 +13,8 @@ export class Lexer {
   private pos: number;
   public currentChar: string | null;
   private static RESERVED_KEYWORDS: TokensObject = {
+    'И': new Token('AND', 'И'),
+    'ИЛИ': new Token('OR', 'ИЛИ'),
   }
   constructor(text: string) {
     this.text = text;
@@ -33,7 +36,16 @@ export class Lexer {
       result += this.currentChar;
       this.advance();
     }
-    result = result.trim();
+    // result = result.trim();
+    // if (/\s/.test(result)) {
+    //   const reserved = Object.keys(Lexer.RESERVED_KEYWORDS);
+    //   const arr = result.split(' ');
+    //   const tmp = arr.filter((v) => reserved.indexOf(v) !== -1);
+    //   if (tmp.length > 0) {
+    //     throw new Error('Invalid character. ' +
+    //      `Cannon use words ${tmp} as part of variable name`);
+    //   }
+    // }
     const token = Lexer.RESERVED_KEYWORDS[result] || new Token('ID', result);
     return token;
   }

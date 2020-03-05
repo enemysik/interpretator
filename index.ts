@@ -6,11 +6,11 @@ import {Interpreter} from './interpreter';
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  Ариф метика="test;test2"
-  test2, 1 = 10,1
+  Арифметика="test;test2"
+  test1 = 10,1
   C=test(5| 6| 3)
   X=(10*C*(1+0,0012*(Tx-15)))
-  F=test2, 1^2
+  F=3 * 5 + 3 <> 2 ^ 5 И 3 > 4
   `;
   const lexer = new Lexer(text);
   const parser = new Parser(lexer);
@@ -19,8 +19,59 @@ function main() {
     'A': 3,
     'B': 7,
     'Tx': 9,
-    'if': function(condition: 0 | 1, trueResult: number, elseResult: number) {
+    'if': function(condition: 0 | 1, trueResult: number,
+        elseResult: number): number {
       return condition === 1 ? trueResult : elseResult;
+    },
+    'Если': function(condition: 0 | 1, trueResult: string,
+        elseResult: string): string {
+      return condition === 1 ? trueResult : elseResult;
+    },
+    'exp': function(x: number): number {
+      return Math.exp(x);
+    },
+    'ln': function(x: number): number {
+      return Math.log(x);
+    },
+    'sin': function(x: number): number {
+      return Math.sin(x);
+    },
+    'cos': function(x: number): number {
+      return Math.cos(x);
+    },
+    'tg': function(x: number): number {
+      return Math.tan(x);
+    },
+    'ctg': function(x: number): number {
+      return 1 / Math.tan(x);
+    },
+    'arcsin': function(x: number): number {
+      return Math.asin(x);
+    },
+    'arccos': function(x: number): number {
+      return Math.acos(x);
+    },
+    'arctg': function(x: number): number {
+      return Math.atan(x);
+    },
+    'arcctg': function(x: number): number {
+      return 1 / Math.atan(x); // TODO ???
+    },
+    'abs': function(x: number): number {
+      return Math.abs(x);
+    },
+    'sqrt': function(x: number): number {
+      return Math.sqrt(x);
+    },
+    'notzer': function(x: number): number {
+      return x > 0 ? x : 0;
+    },
+    'Мтаблица': function(tableName: string, row: number, column: number) {
+      console.log(tableName, row, column); // TODO implement
+      return 0;
+    },
+    'Ошибка': function(text: string) {
+      throw new Error(text);
     },
     'test': (a: number, b: number, c: number) => {
       console.log(a, b, c);

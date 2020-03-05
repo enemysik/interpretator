@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Parser, BinOp, UnaryOp, Num, Compound,
   NoOp, Assign, Program, Block, VarDecl, Type,
-  ProcedureDecl, FunctionCall, Var, AST, Str, Arr} from './parser';
+  ProcedureDecl, FunctionCall, Var, AST, Str, Arr, BoolOp} from './parser';
 import {ValueType} from './token';
 
 type Scope = {
@@ -14,8 +14,8 @@ export class Interpreter {
     this.parser = parser;
     this.GLOBAL_SCOPE = globalScope;
   }
-  error() {
-    throw new Error('Invalid operation');
+  error(node: AST) {
+    throw new Error('Invalid operation' + JSON.stringify(node));
   }
   private visitBinOp(node: BinOp): number {
     if (node.op.type === 'Plus') {
@@ -33,7 +33,34 @@ export class Interpreter {
     if (node.op.type === 'CARET') {
       return Math.pow(this.visit(node.left), this.visit(node.right));
     }
-    throw this.error();
+    throw this.error(node);
+  }
+  private visitBoolOp(node: BoolOp): boolean {
+    if (node.op.type === 'MORE') {
+      return this.visit(node.left) > this.visit(node.right);
+    }
+    if (node.op.type === 'LESS') {
+      return this.visit(node.left) < this.visit(node.right);
+    }
+    if (node.op.type === 'MORE_OR_EQUAL') {
+      return this.visit(node.left) >= this.visit(node.right);
+    }
+    if (node.op.type === 'LESS_OR_EQUAL') {
+      return this.visit(node.left) <= this.visit(node.right);
+    }
+    if (node.op.type === 'NOT_EQUAL') {
+      return this.visit(node.left) !== this.visit(node.right);
+    }
+    if (node.op.type === 'EQUAL') {
+      return this.visit(node.left) === this.visit(node.right);
+    }
+    if (node.op.type === 'AND') {
+      return this.visit(node.left) && this.visit(node.right);
+    }
+    if (node.op.type === 'OR') {
+      return this.visit(node.left) || this.visit(node.right);
+    }
+    throw this.error(node);
   }
   private visitUnaryOp(node: UnaryOp): number {
     const op = node.op.type;
@@ -43,7 +70,7 @@ export class Interpreter {
     if (op === 'Minus') {
       return -this.visit(node.expr);
     }
-    throw this.error();
+    throw this.error(node);
   }
   private visitNum(node: Num): number {
     return node.value as number;
@@ -133,6 +160,9 @@ export class Interpreter {
     }
     if (node instanceof Arr) {
       return this.visitArr(node);
+    }
+    if (node instanceof BoolOp) {
+      return this.visitBoolOp(node) ? 1 : 0;
     }
   }
   interpret() {
