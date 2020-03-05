@@ -240,4 +240,11 @@ export class Lexer {
     }
     return new Token('EOF', null);
   }
+  * enumerateTokens() {
+    let token = this.getNextToken();
+    while (token.type !== 'EOF') {
+      token = this.getNextToken();
+      yield token;
+    }
+  }
 }

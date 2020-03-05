@@ -13,6 +13,7 @@ function main() {
   F=3 * 5 + 3 <> 2 ^ 5 И 3 > 4
   `;
   const lexer = new Lexer(text);
+  // for (const token of lexer.enumerateTokens()) console.log(token); return;
   const parser = new Parser(lexer);
   const globalScope = {
     'D': 0.1,
