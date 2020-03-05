@@ -274,7 +274,7 @@ export class ProcedureDecl extends AST {
   }
   
 }
-export class ProcedureCall extends AST {
+export class FunctionCall extends AST {
   procName: string;
   actualParams: AST[];
   token: Token;
@@ -325,6 +325,9 @@ export class Parser {
       this.eat('RParen');
       return node;
     }
+    if (this.lexer.currentChar === '(') {
+      return this.functionCallStatement();
+    }
     return this.variable();
   }
   term(): AST {
@@ -359,7 +362,7 @@ export class Parser {
     return new NoOp();
   }
   variable() {
-    const node = new Var(this.currentToken);  
+    const node = new Var(this.currentToken);
     this.eat('ID');
     return node;
   }
@@ -377,7 +380,7 @@ export class Parser {
     } 
     if (this.currentToken.type === 'ID') {
       if (this.lexer.currentChar === '(') {
-        return this.procCallStatement();
+        return this.functionCallStatement();
       }
       return this.assignmentStatement();
     }
@@ -465,7 +468,7 @@ export class Parser {
     }
     return new Type(token);
   }
-  procCallStatement() {
+  functionCallStatement() {
     const token = this.currentToken;
     const procName = token.value as string;
     this.eat('ID');
@@ -481,7 +484,7 @@ export class Parser {
       actualParams.push(node);
     }
     this.eat('RParen');
-    return new ProcedureCall(procName, actualParams, token);
+    return new FunctionCall(procName, actualParams, token);
   }
   parse() {
     const node = this.program();
@@ -493,9 +496,10 @@ export class Parser {
 }
 export class Interpreter {
   private parser: Parser;
-  GLOBAL_SCOPE = {};
-  constructor(parser: Parser) {
+  GLOBAL_SCOPE;
+  constructor(parser: Parser, globalScope = {}) {
     this.parser = parser;
+    this.GLOBAL_SCOPE = globalScope;
   }
   private visitBinOp(node: BinOp) {
     if (node.op.type === 'Plus')
@@ -539,8 +543,8 @@ export class Interpreter {
   private visitVarDecl(node: VarDecl) {}
   private visitType(node: Type) {}
   private visitProcedureDecl(node: ProcedureDecl) {}
-  private visitProcedureCall(node: ProcedureCall) {
-    node.actualParams.forEach(paramNode => this.visit(paramNode));
+  private visitFunctionCall(node: FunctionCall) {
+    return this.GLOBAL_SCOPE[node.procName](...node.actualParams.map(pn => this.visit(pn)))
   }
   private visitVar(node: Var) {
     const varName = node.value;
@@ -576,8 +580,8 @@ export class Interpreter {
       return this.visitType(node)
     if (node instanceof ProcedureDecl)
       return this.visitProcedureDecl(node)
-    if (node instanceof ProcedureCall)
-      return this.visitProcedureCall(node)
+    if (node instanceof FunctionCall)
+      return this.visitFunctionCall(node)
   }
   interpret() {
     const tree = this.parser.parse();
@@ -591,24 +595,8 @@ function main() {
   VAR
      a : INTEGER;
   
-  PROCEDURE P1;
-  VAR
-     a : REAL;
-     k : INTEGER;
-  
-     PROCEDURE P2;
-     VAR
-        a, z : INTEGER;
-     BEGIN {P2}
-        z := 777;
-     END;  {P2}
-  
-  BEGIN {P1}
-  
-  END;  {P1}
-  
   BEGIN {Part12}
-     a := 10;
+     a := Test(10);
   END.  {Part12}`;
   const lexer = new Lexer(text);
 
@@ -619,7 +607,13 @@ function main() {
   // } while (tmp.type !== 'EOF')
   
   const parser = new Parser(lexer);
-  const interpreter = new Interpreter(parser);
+  const globalScope = {};
+  // @ts-ignore
+  globalScope.Test = function (x) {
+    console.log(x);
+    return x * x;
+  }
+  const interpreter = new Interpreter(parser, globalScope);
   interpreter.interpret();
   console.log(interpreter.GLOBAL_SCOPE);
 }
