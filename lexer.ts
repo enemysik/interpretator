@@ -1,7 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Token} from './token';
 
-export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d)/;
+export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
 type TokensObject = {
@@ -12,14 +12,6 @@ export class Lexer {
   private pos: number;
   public currentChar: string | null;
   private static RESERVED_KEYWORDS: TokensObject = {
-    BEGIN: new Token('BEGIN', 'BEGIN'),
-    END: new Token('END', 'END'),
-    PROGRAM: new Token('PROGRAM', 'PROGRAM'),
-    VAR: new Token('VAR', 'VAR'),
-    DIV: new Token('INTEGER_DIV', 'DIV'),
-    INTEGER: new Token('INTEGER', 'INTEGER'),
-    REAL: new Token('REAL', 'REAL'),
-    PROCEDURE: new Token('PROCEDURE', 'PROCEDURE'),
   }
   constructor(text: string) {
     this.text = text;
@@ -62,8 +54,7 @@ export class Lexer {
     }
   }
   private skipWhiteSpace() {
-    while (this.currentChar != null &&
-      (this.currentChar === ' ' || this.currentChar === '\n')) {
+    while (this.currentChar != null && this.currentChar === ' ') {
       this.advance();
     }
   }
@@ -87,7 +78,7 @@ export class Lexer {
   }
   getNextToken() {
     while (this.currentChar != null) {
-      if (this.currentChar === ' ' || this.currentChar === '\n') {
+      if (this.currentChar === ' ') {
         this.skipWhiteSpace();
         continue;
       }
@@ -103,6 +94,16 @@ export class Lexer {
       if (/\=/.test(this.currentChar)) {
         this.advance();
         return new Token('ASSIGN', '=');
+      }
+
+      if (this.currentChar === '\n') {
+        this.advance();
+        return new Token('ENTER', '\n');
+      }
+
+      if (/\"/.test(this.currentChar)) {
+        this.advance();
+        return new Token('DQuote', '"');
       }
 
       if (/\:/.test(this.currentChar)) {

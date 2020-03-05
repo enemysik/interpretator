@@ -6,8 +6,8 @@ import {Interpreter} from './interpreter';
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  C=test(5| 6| 3);
-  X=(10*C*(1+0.0012*(Tx-15)));
+  C=test(5| 6| 3)
+  X=(10*C*(1+0.0012*(Tx-15)))
   `;
   const lexer = new Lexer(text);
 
@@ -34,7 +34,7 @@ function main() {
     'A': 3,
     'B': 7,
     'Tx': 9,
-    'test': (a, b, c) => {
+    'test': (a: number, b: number, c: number) => {
       console.log(a, b, c);
       return 5;
     },

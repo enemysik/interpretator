@@ -1,10 +1,11 @@
 /* eslint-disable require-jsdoc */
-export type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'INTEGER_DIV' |'FLOAT_DIV';
-export type PascalKeywordsType = 'BEGIN' | 'END' | 'PROGRAM'| 'VAR'|
-  'INTEGER_DIV'| 'INTEGER'| 'REAL' | 'PROCEDURE';
-export type TokenType = BinOpsType | PascalKeywordsType | SyntaxType |
-  'EOF' | 'ASSIGN' | 'SEMI' | 'DOT' | 'ID' | 'INTEGER_CONST' |'REAL_CONST';
-export type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen' | 'PIPE';
+type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'INTEGER_DIV' |'FLOAT_DIV';
+type VariableType = 'INTEGER_CONST' |'REAL_CONST';
+type SyntaxType ='COLON' | 'COMMA' | 'LParen' | 'RParen' | 'PIPE' |
+'SEMI' | 'DOT' | 'ENTER' | 'DQuote';
+export type TokenType = BinOpsType | SyntaxType | VariableType |
+  'EOF' | 'ASSIGN' | 'ID';
+
 export type ValueType = string | number | null;
 
 export class Token {
