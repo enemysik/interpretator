@@ -177,10 +177,6 @@ export class Parser {
       this.eat('Plus');
       return new UnaryOp(token, this.factor());
     }
-    if (token.type === 'INTEGER_CONST') {
-      this.eat('INTEGER_CONST');
-      return new Num(token);
-    }
     if (token.type === 'REAL_CONST') {
       this.eat('REAL_CONST');
       return new Num(token);

@@ -77,17 +77,29 @@ export class Lexer {
       result += this.currentChar;
       this.advance();
     }
-    if (/(\,|\.)/.test(this.currentChar!)) {
+    const isFloat = /(\,|\.)/.test(this.currentChar!);
+    if (isFloat) {
       result += '.'; // js support only DOT
       this.advance();
       while (this.currentChar != null && /\d/.test(this.currentChar)) {
         result +=this.currentChar;
         this.advance();
       }
-      return new Token('REAL_CONST', result);
-    } else {
-      return new Token('INTEGER_CONST', result);
     }
+    const isExp = /\e/.test(this.currentChar!);
+    if (isExp) {
+      result += 'e';
+      this.advance();
+      if (/\-|\+/.test(this.currentChar!)) {
+        result += this.currentChar;
+        this.advance();
+      }
+      while (this.currentChar != null && /\d/.test(this.currentChar)) {
+        result +=this.currentChar;
+        this.advance();
+      }
+    }
+    return new Token('REAL_CONST', result);
   }
   string() {
     let result = '';

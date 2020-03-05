@@ -7,8 +7,8 @@ function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
   Арифметика="test;test2"
-  test1 = 10,1
-  C=test(5| 6| 3)
+  test1 = 10e2
+  C=5
   X=(10*C*(1+0,0012*(Tx-15)))
   F=3 * 5 + 3 <> 2 ^ 5 И 3 > 4
   `;
