@@ -270,30 +270,18 @@ export class Lexer {
     }
     this.pos = pos;
   }
-  enumerateAssignedVariables() {
-    const result: TokensObject = {};
-    const pos = this.pos;
-    let prevToken = this.getNextToken();
-    let token = this.getNextToken();
-    while (token.type !== 'EOF') {
-      if (token.type === 'ASSIGN') {
-        result[prevToken.value!] = prevToken;
-      }
-      prevToken = token;
-      token = this.getNextToken();
-    }
-    this.pos = pos;
-    return Object.values(result);
-  }
-  enumerateVariables() {
+  enumerateNotAssignedVariables() {
     const result: TokensObject = {};
     const pos = this.pos;
     let token = this.getNextToken();
-    while (token.type !== 'EOF') {
-      if (token instanceof VariableToken) {
+    let nextToken = this.getNextToken();
+    while (nextToken.type !== 'EOF') {
+      if (token.type === 'ID' && nextToken.type !== 'ASSIGN' &&
+          !(token instanceof FunctionToken)) {
         result[token.value!] = token;
       }
-      token = this.getNextToken();
+      token = nextToken;
+      nextToken = this.getNextToken();
     }
     this.pos = pos;
     return Object.values(result);
