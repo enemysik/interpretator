@@ -3,22 +3,26 @@ import {Lexer, TokensObject} from './lexer';
 import {ChemicArrayToken, ChemicArrayVariableToken, VariableToken,
   FunctionToken} from './token';
 
-export class Detecter extends Lexer {
+export class Detecter {
+  lexer: Lexer;
+  constructor(lexer: Lexer) {
+    this.lexer = lexer;
+  }
   * enumerateTokens() {
-    const pos = this.pos;
-    let token = this.getNextToken();
+    const pos = this.lexer.pos;
+    let token = this.lexer.getNextToken();
     while (token.type !== 'EOF') {
-      token = this.getNextToken();
+      token = this.lexer.getNextToken();
       yield token;
     }
-    this.pos = pos;
+    this.lexer.pos = pos;
   }
   enumVars() {
     const result: TokensObject = {};
-    const pos = this.pos;
-    let token = this.getNextToken();
-    let nextToken = this.getNextToken();
-    let nextNextToken = this.getNextToken();
+    const pos = this.lexer.pos;
+    let token = this.lexer.getNextToken();
+    let nextToken = this.lexer.getNextToken();
+    let nextNextToken = this.lexer.getNextToken();
     while (token.type !== 'EOF') {
       if (token.type === 'ID') {
         if (nextToken.type === 'ASSIGN') {
@@ -44,9 +48,9 @@ export class Detecter extends Lexer {
       }
       token = nextToken;
       nextToken = nextNextToken;
-      nextNextToken = this.getNextToken();
+      nextNextToken = this.lexer.getNextToken();
     }
-    this.pos = pos;
+    this.lexer.pos = pos;
     return Object.values(result);
   }
 }
