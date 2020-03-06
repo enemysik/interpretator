@@ -18,11 +18,10 @@ export class Token {
     this.type = type;
     this.value = value;
   }
-  toString() {
-    return `Token(${this.type}, ${this.value})`;
-  }
 }
-export class VariableToken extends Token { }
+export class VariableToken extends Token {
+  isAssignable = false;
+}
 export class FunctionToken extends Token { }
 
 export class ChemicArrayToken extends Token {
@@ -35,3 +34,4 @@ export class ChemicArrayToken extends Token {
     this.editable = editable;
   }
 }
+export class ChemicArrayVariableToken extends ChemicArrayToken { }

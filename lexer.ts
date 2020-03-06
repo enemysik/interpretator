@@ -4,12 +4,12 @@ import {Token, ChemicArrayToken, VariableToken, FunctionToken} from './token';
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s|\.)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
 
-type TokensObject = {
+export type TokensObject = {
   [name: string]: Token;
 }
 export class Lexer {
   private text: string;
-  private pos: number;
+  public pos: number;
   public currentChar: string | null;
   private static RESERVED_KEYWORDS: TokensObject = {
     'И': new Token('AND', 'И'),
@@ -52,6 +52,7 @@ export class Lexer {
           break;
         }
       } else {
+        if (peekedWord === '') break;
         this.advance(peekedWord.length);
         result += peekedWord;
         if (this.currentChar === ' ') {
@@ -260,30 +261,5 @@ export class Lexer {
       this.error();
     }
     return new Token('EOF', null);
-  }
-  * enumerateTokens() {
-    const pos = this.pos;
-    let token = this.getNextToken();
-    while (token.type !== 'EOF') {
-      token = this.getNextToken();
-      yield token;
-    }
-    this.pos = pos;
-  }
-  enumerateNotAssignedVariables() {
-    const result: TokensObject = {};
-    const pos = this.pos;
-    let token = this.getNextToken();
-    let nextToken = this.getNextToken();
-    while (nextToken.type !== 'EOF') {
-      if (token.type === 'ID' && nextToken.type !== 'ASSIGN' &&
-          !(token instanceof FunctionToken)) {
-        result[token.value!] = token;
-      }
-      token = nextToken;
-      nextToken = this.getNextToken();
-    }
-    this.pos = pos;
-    return Object.values(result);
   }
 }
