@@ -22,3 +22,16 @@ export class Token {
     return `Token(${this.type}, ${this.value})`;
   }
 }
+export class VariableToken extends Token { }
+export class FunctionToken extends Token { }
+
+export class ChemicArrayToken extends Token {
+  possibleValues: string[];
+  editable: boolean;
+  constructor(type: TokenType, value: ValueType, possibleValues: string[],
+      editable: boolean) {
+    super(type, value);
+    this.possibleValues = possibleValues;
+    this.editable = editable;
+  }
+}

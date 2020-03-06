@@ -1,5 +1,5 @@
 /* eslint-disable require-jsdoc */
-import {Token} from './token';
+import {Token, ChemicArrayToken, VariableToken, FunctionToken} from './token';
 
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s|\.)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
@@ -61,7 +61,11 @@ export class Lexer {
       }
     }
     result = result.trim();
-    const token = Lexer.RESERVED_KEYWORDS[result] || new Token('ID', result);
+    if (this.currentChar == '(') {
+      return new FunctionToken('ID', result);
+    }
+    const token = Lexer.RESERVED_KEYWORDS[result] ||
+      new VariableToken('ID', result);
     return token;
   }
   private skipComment() {
@@ -124,12 +128,14 @@ export class Lexer {
       this.advance();
     }
     this.advance();
-    let editable = false; // TODO find where i should it use
+    let editable = false;
     if (this.currentChar != null && /\+/.test(this.currentChar)) {
       editable = true;
+      this.advance();
     }
     if (/\;/.test(result)) {
-      return new Token('ARRAY_CONST', result);
+      return new ChemicArrayToken('STRING_CONST',
+          result, result.split(';'), editable);
     } else {
       return new Token('STRING_CONST', result);
     }
@@ -256,10 +262,40 @@ export class Lexer {
     return new Token('EOF', null);
   }
   * enumerateTokens() {
+    const pos = this.pos;
     let token = this.getNextToken();
     while (token.type !== 'EOF') {
       token = this.getNextToken();
       yield token;
     }
+    this.pos = pos;
+  }
+  enumerateAssignedVariables() {
+    const result: TokensObject = {};
+    const pos = this.pos;
+    let prevToken = this.getNextToken();
+    let token = this.getNextToken();
+    while (token.type !== 'EOF') {
+      if (token.type === 'ASSIGN') {
+        result[prevToken.value!] = prevToken;
+      }
+      prevToken = token;
+      token = this.getNextToken();
+    }
+    this.pos = pos;
+    return Object.values(result);
+  }
+  enumerateVariables() {
+    const result: TokensObject = {};
+    const pos = this.pos;
+    let token = this.getNextToken();
+    while (token.type !== 'EOF') {
+      if (token instanceof VariableToken) {
+        result[token.value!] = token;
+      }
+      token = this.getNextToken();
+    }
+    this.pos = pos;
+    return Object.values(result);
   }
 }
