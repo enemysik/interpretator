@@ -252,10 +252,17 @@ export class Lexer {
         this.advance();
         return new Token('ASSIGN', '=');
       }
-
-      if (this.currentChar === '\n') {
+      if (this.currentChar === '\r' && this.peek() === '\n' ||
+      this.currentChar === '\n' && this.peek() === '\r') {
+        const value = this.currentChar + this.peek();
         this.advance();
-        return new Token('ENTER', '\n');
+        this.advance();
+        return new Token('ENTER', value);
+      }
+      if (this.currentChar === '\n' || this.currentChar === '\r') {
+        const value = this.currentChar;
+        this.advance();
+        return new Token('ENTER', value);
       }
 
       this.error();
