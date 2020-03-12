@@ -8,7 +8,7 @@
       "name": "Current TS File",
       "type": "node",
       "request": "launch",
-      "args": ["index.ts"],
+      "args": ["test.ts"],
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
