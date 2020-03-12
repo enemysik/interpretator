@@ -94,7 +94,16 @@ export class Interpreter {
       return this.visit(node.left) * this.visit(node.right);
     }
     if (node.op.type === 'FLOAT_DIV') {
-      return this.visit(node.left) / this.visit(node.right);
+      const left = this.visit(node.left);
+      const right = this.visit(node.right);
+      if (right === 0) {
+        let errorMessage = 'Cannot divide by zero.';
+        if (node.right instanceof Var) {
+          errorMessage += ` Variable name ${node.right.value}`;
+        }
+        throw new Error(errorMessage);
+      }
+      return left / right;
     }
     if (node.op.type === 'CARET') {
       return Math.pow(this.visit(node.left), this.visit(node.right));
