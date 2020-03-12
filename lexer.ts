@@ -76,7 +76,8 @@ export class Lexer {
     this.advance();
   }
   private error() {
-    throw new Error('Invalid character');
+    throw new Error('Invalid character: ' +
+    `->${this.currentChar}${this.peek()}`);
   }
   private advance(length = 1) {
     this.pos += length;
