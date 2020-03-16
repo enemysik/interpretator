@@ -14,6 +14,8 @@ export class Lexer {
   private static RESERVED_KEYWORDS: TokensObject = {
     'И': new Token('AND', 'И'),
     'ИЛИ': new Token('OR', 'ИЛИ'),
+    'Дата': new Token('DATE', 'Дата'),
+    'Время': new Token('TIME', 'Время'),
   }
   constructor(text: string) {
     this.text = text;

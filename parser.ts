@@ -135,6 +135,20 @@ export class Str extends AST {
     this.value = token.value as string;
   }
 }
+export class ChemicDate extends AST {
+  token: Token;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+  }
+}
+export class ChemicTime extends AST {
+  token: Token;
+  constructor(token: Token) {
+    super();
+    this.token = token;
+  }
+}
 export class Arr extends AST {
   token: Token;
   array: string[];
@@ -180,6 +194,14 @@ export class Parser {
     if (token.type === 'REAL_CONST') {
       this.eat('REAL_CONST');
       return new Num(token);
+    }
+    if (token.type === 'DATE') {
+      this.eat('DATE');
+      return new ChemicDate(token);
+    }
+    if (token.type === 'TIME') {
+      this.eat('TIME');
+      return new ChemicTime(token);
     }
     if (token.type === 'STRING_CONST') {
       this.eat('STRING_CONST');

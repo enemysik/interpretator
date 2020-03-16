@@ -6,8 +6,9 @@ type SyntaxType = 'LParen' | 'RParen' | 'PIPE' |
   'SEMI' | 'ENTER' | 'CARET';
 type BooleanType = 'EQUAL' | 'NOT_EQUAL' | 'MORE' | 'LESS' |
   'MORE_OR_EQUAL' | 'LESS_OR_EQUAL' | 'OR' | 'AND';
+type ChemicType = 'DATE' | 'TIME';
 export type TokenType = BinOpsType | SyntaxType | VariableType | BooleanType |
-  'EOF' | 'ASSIGN' | 'ID';
+  ChemicType | 'EOF' | 'ASSIGN' | 'ID';
 
 export type ValueType = string | number | null;
 
