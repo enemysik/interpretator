@@ -136,7 +136,7 @@ export class Lexer {
       this.advance();
     }
     if (/\;/.test(result)) {
-      return new ChemicArrayToken('STRING_CONST',
+      return new ChemicArrayToken('ARRAY_CONST',
           result, result.split(';'), editable);
     } else {
       return new Token('STRING_CONST', result);

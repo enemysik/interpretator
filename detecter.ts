@@ -53,5 +53,12 @@ export class Detecter {
     this.lexer.pos = pos;
     return Object.values(result);
   }
+  * enumArrayVars() {
+    for (const token of this.enumVars()) {
+      if (token instanceof ChemicArrayVariableToken) {
+        yield token;
+      }
+    }
+  }
 }
 export default Detecter;
