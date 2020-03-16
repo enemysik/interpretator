@@ -372,3 +372,4 @@ export class Parser {
     return node;
   }
 }
+export default Parser;

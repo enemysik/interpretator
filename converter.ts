@@ -44,3 +44,4 @@ export class Converter {
     return result;
   }
 }
+export default Converter;

@@ -54,3 +54,4 @@ export class Detecter {
     return Object.values(result);
   }
 }
+export default Detecter;

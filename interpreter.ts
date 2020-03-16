@@ -245,3 +245,4 @@ export class Interpreter {
     return this.visit(tree);
   }
 }
+export default Interpreter;

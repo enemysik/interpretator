@@ -271,3 +271,4 @@ export class Lexer {
     return new Token('EOF', null);
   }
 }
+export default Lexer;

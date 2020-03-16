@@ -35,3 +35,4 @@ export class ChemicArrayToken extends Token {
   }
 }
 export class ChemicArrayVariableToken extends ChemicArrayToken { }
+export default Token;
