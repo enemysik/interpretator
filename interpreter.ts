@@ -3,82 +3,113 @@ import {Parser, BinOp, UnaryOp, Num, Compound,
   NoOp, Assign, Program, Block, VarDecl, Type,
   ProcedureDecl, FunctionCall, Var, AST, Str, Arr, BoolOp} from './parser';
 import {ValueType} from './token';
+import {Lexer} from './lexer';
 
 type Scope = {
-  [id: string]: any
-}
-const GLOBAL_SCOPE_PROTOTYPE = {
-  'if': function(condition: 0 | 1, trueResult: number,
+  [id: string]: Function;
+} & Object
+const GLOBAL_SCOPE_PROTOTYPE: Scope = {
+  ['if'.toUpperCase()]: function(condition: 0 | 1 | boolean, trueResult: number,
       elseResult: number): number {
-    return condition === 1 ? trueResult : elseResult;
+    console.log(`if(${condition}|${trueResult}|${elseResult}`);
+    if (typeof condition === 'boolean') {
+      return condition ? trueResult : elseResult;
+    }
+    if (typeof condition === 'number') {
+      return condition === 1 ? trueResult : elseResult;
+    }
+    throw new Error('Wrong function argument');
   },
-  'Если': function(condition: 0 | 1, trueResult: string,
+  ['Если'.toUpperCase()]: function(condition: 0 | 1, trueResult: string,
       elseResult: string): string {
-    return condition === 1 ? trueResult : elseResult;
+    return this['if'](condition, trueResult, elseResult);
   },
-  'exp': function(x: number): number {
+  ['exp'.toUpperCase()]: function(x: number): number {
     return Math.exp(x);
   },
-  'ln': function(x: number): number {
+  ['ln'.toUpperCase()]: function(x: number): number {
     return Math.log(x);
   },
-  'sin': function(x: number): number {
+  ['sin'.toUpperCase()]: function(x: number): number {
     return Math.sin(x);
   },
-  'cos': function(x: number): number {
+  ['cos'.toUpperCase()]: function(x: number): number {
     return Math.cos(x);
   },
-  'tg': function(x: number): number {
+  ['tg'.toUpperCase()]: function(x: number): number {
     return Math.tan(x);
   },
-  'ctg': function(x: number): number {
+  ['ctg'.toUpperCase()]: function(x: number): number {
     return 1 / Math.tan(x);
   },
-  'arcsin': function(x: number): number {
+  ['arcsin'.toUpperCase()]: function(x: number): number {
     return Math.asin(x);
   },
-  'arccos': function(x: number): number {
+  ['arccos'.toUpperCase()]: function(x: number): number {
     return Math.acos(x);
   },
-  'arctg': function(x: number): number {
+  ['arctg'.toUpperCase()]: function(x: number): number {
     return Math.atan(x);
   },
-  'arcctg': function(x: number): number {
+  ['arcctg'.toUpperCase()]: function(x: number): number {
     return 1 / Math.atan(x); // TODO ???
   },
-  'abs': function(x: number): number {
+  ['abs'.toUpperCase()]: function(x: number): number {
     return Math.abs(x);
   },
-  'sqrt': function(x: number): number {
+  ['sqrt'.toUpperCase()]: function(x: number): number {
     return Math.sqrt(x);
   },
-  'notzer': function(x: number): number {
+  ['notzer'.toUpperCase()]: function(x: number): number {
     return x > 0 ? x : 0;
   },
-  'Мтаблица': function(tableName: string, row: number, column: number) {
+  ['Мтаблица'.toUpperCase()]: function(tableName: string, row: number, column: number) {
     console.log(tableName, row, column); // TODO implement
     return 0;
   },
-  'INT': function(x: number) {
+  ['Цифры'.toUpperCase()]: function(value: number, n: number, type: 0 | 1) {
+    if (type === 1) {
+      if (n >= 0) {
+        return +value.toFixed(n);
+      }
+      if (n < 0) {
+        const l = value.toString().split('.')[0].length;
+        return +value.toPrecision(l + n);
+      }
+    } else {
+      return +value.toPrecision(n);
+    }
+  },
+  ['Пометодике'.toUpperCase()]: function(value: number) {
+    return value; // TODO implement
+  },
+  ['ПометодикеN'.toUpperCase()]: function(value: number, n: number) {
+    return +value.toFixed(n); // TODO implement
+  },
+  ['INT'.toUpperCase()]: function(x: number) {
     return Math.trunc(x);
   },
-  'FRAC': function(x: number) {
+  ['FRAC'.toUpperCase()]: function(x: number) {
     return x % 1; // TODO accuracy
   },
-  'ЧЗП': function(x: number) {
+  ['ЧЗП'.toUpperCase()]: function(x: number) {
     console.log(x);
     return 0; // TODO implement
   },
-  'Ошибка': function(text: string) {
+  ['Ошибка'.toUpperCase()]: function(text: string) {
     throw new Error(text);
   },
 };
 export class Interpreter {
   private parser: Parser;
   GLOBAL_SCOPE: Scope;
-  constructor(parser: Parser, globalScope = {}) {
-    this.parser = parser;
-    this.GLOBAL_SCOPE = {...GLOBAL_SCOPE_PROTOTYPE, ...globalScope};
+  constructor(parser: Parser | string, globalScope = {}) {
+    if (typeof parser === 'string') {
+      this.parser = new Parser(new Lexer(parser));
+    } else {
+      this.parser = parser;
+    }
+    this.GLOBAL_SCOPE = globalScope;
   }
   error(node: AST) {
     throw new Error('Invalid operation' + JSON.stringify(node));
@@ -127,7 +158,10 @@ export class Interpreter {
       return this.visit(node.left) !== this.visit(node.right);
     }
     if (node.op.type === 'EQUAL') {
-      return this.visit(node.left) === this.visit(node.right);
+      const left = this.visit(node.left);
+      const right = this.visit(node.right);
+      console.log(`EQUAL ${left} === ${right}`);
+      return left === right;
     }
     if (node.op.type === 'AND') {
       return this.visit(node.left) && this.visit(node.right);
@@ -156,7 +190,12 @@ export class Interpreter {
   private visitNoOp(): void {}
   private visitAssign(node: Assign) {
     const varName = node.left.value as string;
-    this.GLOBAL_SCOPE[varName] = this.visit(node.right);
+    if (node.right instanceof Arr) return; // TODO ignore combo variables
+    const right = this.visit(node.right);
+    // console.log('assign', varName, this.GLOBAL_SCOPE[varName],
+    //     typeof this.GLOBAL_SCOPE[varName], right, typeof right,
+    //     typeof node.right);
+    this.GLOBAL_SCOPE[varName] = right;
   }
   private visitProgram(node: Program) {
     return this.visit(node.block);
@@ -171,7 +210,11 @@ export class Interpreter {
   private visitType() {}
   private visitProcedureDecl() {}
   private visitFunctionCall(node: FunctionCall): ValueType {
-    return this.GLOBAL_SCOPE[node.procName](
+    const func = GLOBAL_SCOPE_PROTOTYPE[node.procName.toUpperCase()];
+    if (typeof func !== 'function') {
+      throw new Error(`Function ${node.procName} not found.`);
+    }
+    return func(
         ...node.actualParams.map((pn) => this.visit(pn)),
     );
   }

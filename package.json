@@ -5,6 +5,9 @@
   "main": "index.ts",
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "publish": "tsc"
+  },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.22.0",
     "@typescript-eslint/parser": "^2.22.0",
