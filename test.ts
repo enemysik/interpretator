@@ -10,9 +10,15 @@ import {Converter} from './converter';
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  X = if (3 < 5;
-    0;
-    1)
+
+C=(D-A)/B1
+11=2233232
+
+
+X=(10*C*(1+0.0012*(Tx-15)))
+F=Дата
+G=Время
+
   `;
   const lexer = new Lexer(text);
   // for (const token of new Detecter(lexer).enumVars()) console.log(token);// return;
@@ -20,17 +26,10 @@ function main() {
   // console.log(new Converter(lexer).convert()); return;
   const parser = new Parser(lexer);
   const globalScope = {
-    'Аппарат': 'HI',
-    'Термометр': 'HI',
-    'Барометр': 'HI',
-    'VN': 3,
-    'V_n': 7,
-    'Тизм': 9,
-    'Po': 9,
-    'Т4': 9,
-    'Т3': 9,
-    'V4': 9,
-    'V3': 9,
+    'B1': 1,
+    'Tx': 1,
+    'D': 1,
+    'A': 5,
   };
   const interpreter = new Interpreter(parser, globalScope);
   interpreter.interpret();

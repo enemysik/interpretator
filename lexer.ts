@@ -13,7 +13,7 @@ export type TokensObject = {
   [name: string]: Token;
 }
 export class Lexer {
-  private text: string;
+  text: string;
   public pos: number;
   public currentChar: string | null;
   private static RESERVED_KEYWORDS: TokensObject = {
@@ -265,10 +265,14 @@ export class Lexer {
       this.currentChar === '\n' && this.peek() === '\r') {
         this.advance();
         this.advance();
+        this.line++;
+        this.lineStartPosition = this.pos;
         continue;
       }
       if (this.currentChar === '\n' || this.currentChar === '\r') {
         this.advance();
+        this.lineStartPosition = this.pos;
+        this.line++;
         continue;
       }
 

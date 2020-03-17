@@ -1,6 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Token, ValueType, TokenType} from './token';
 import {Lexer} from './lexer';
+import {ErrorHandler} from './error-handler';
 
 export abstract class AST { }
 export class BinOp extends AST {
@@ -166,9 +167,8 @@ export class Parser {
     this.currentToken = this.lexer.getNextToken();
   }
   private error() {
-    throw new Error('Invalid syntax. ' +
-    `at ${this.lexer.pos}` +
-    ` - ${this.currentToken.type}:${this.currentToken.value}`);
+    throw new Error(new ErrorHandler(this.lexer)
+        .formatErrorMessage(this.currentToken));
   }
   private eat(tokenType: TokenType) {
     if (this.currentToken.type === tokenType) {
@@ -324,6 +324,7 @@ export class Parser {
   }
   private assignmentStatement() {
     const left = this.variable();
+    if (!(left instanceof Var)) throw this.error();
     const token = this.currentToken;
     this.eat('ASSIGN');
     const right = this.expr();
@@ -355,6 +356,8 @@ export class Parser {
         return this.functionCallStatement();
       }
       return this.assignmentStatement();
+    } else {
+      throw this.error();
     }
     return this.empty();
   }
