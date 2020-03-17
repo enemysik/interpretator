@@ -15,7 +15,7 @@ function main() {
   Xкон=ПОМЕТОДИКЕN(Хмасс; 1)
   `;
   const lexer = new Lexer(text);
-  // for (const token of new Detecter(lexer).enumArrayVars()) console.log(token);// return;
+  for (const token of new Detecter(lexer).enumVars()) console.log(token);// return;
   // for (const token of new Detecter(text).enumerateTokens()) console.log(token); return;
   // console.log(new Converter(lexer).convert()); return;
   const parser = new Parser(lexer);
