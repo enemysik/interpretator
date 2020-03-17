@@ -3,7 +3,7 @@ type BinOpsType = 'Plus' | 'Minus' | 'Mul' |'FLOAT_DIV';
 type VariableType = 'REAL_CONST' | 'STRING_CONST' |
   'ARRAY_CONST';
 type SyntaxType = 'LParen' | 'RParen' | 'PIPE' |
-  'SEMI' | 'ENTER' | 'CARET';
+  'SEMI' | 'CARET';
 type BooleanType = 'EQUAL' | 'NOT_EQUAL' | 'MORE' | 'LESS' |
   'MORE_OR_EQUAL' | 'LESS_OR_EQUAL' | 'OR' | 'AND';
 type ChemicType = 'DATE' | 'TIME';
@@ -24,8 +24,6 @@ export class VariableToken extends Token {
   isAssignable = false;
 }
 export class FunctionToken extends Token { }
-export class ChemicDateToken extends Token { }
-export class ChemicTimeToken extends Token { }
 export class ChemicArrayToken extends Token {
   possibleValues: string[];
   editable: boolean;

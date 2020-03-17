@@ -167,7 +167,8 @@ export class Parser {
   }
   private error() {
     throw new Error('Invalid syntax. ' +
-    `${this.currentToken.type}:${this.currentToken.value}`);
+    `at ${this.lexer.pos}` +
+    ` - ${this.currentToken.type}:${this.currentToken.value}`);
   }
   private eat(tokenType: TokenType) {
     if (this.currentToken.type === tokenType) {
@@ -339,13 +340,9 @@ export class Parser {
       const node = this.expr();
       actualParams.push(node);
     }
-    while (this.currentToken.type === 'PIPE') {
-      this.eat('PIPE');
-      const node = this.expr();
-      actualParams.push(node);
-    }
-    while (this.currentToken.type === 'SEMI') {
-      this.eat('SEMI');
+    while (this.currentToken.type === 'PIPE' ||
+        this.currentToken.type === 'SEMI') {
+      this.eat(this.currentToken.type);
       const node = this.expr();
       actualParams.push(node);
     }
@@ -364,12 +361,8 @@ export class Parser {
   private statementList() {
     const node = this.statement();
     const results = [node];
-    while (this.currentToken.type === 'ENTER') {
-      this.eat('ENTER');
+    while (this.currentToken.type !== 'EOF') {
       results.push(this.statement());
-    }
-    if (this.currentToken.type === 'ID') {
-      this.error();
     }
     return results;
   }

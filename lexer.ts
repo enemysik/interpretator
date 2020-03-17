@@ -4,8 +4,6 @@ import {
   ChemicArrayToken,
   VariableToken,
   FunctionToken,
-  ChemicTimeToken,
-  ChemicDateToken,
 } from './token';
 
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s|\.)/;
@@ -19,10 +17,10 @@ export class Lexer {
   public pos: number;
   public currentChar: string | null;
   private static RESERVED_KEYWORDS: TokensObject = {
-    'И': new Token('AND', 'И'),
-    'ИЛИ': new Token('OR', 'ИЛИ'),
-    'Дата': new ChemicDateToken('DATE', 'Дата'),
-    'Время': new ChemicTimeToken('TIME', 'Время'),
+    ['И'.toUpperCase()]: new Token('AND', 'И'),
+    ['ИЛИ'.toUpperCase()]: new Token('OR', 'ИЛИ'),
+    ['Дата'.toUpperCase()]: new Token('DATE', 'Дата'),
+    ['Время'.toUpperCase()]: new Token('TIME', 'Время'),
   }
   constructor(text: string) {
     this.text = text;
@@ -53,10 +51,10 @@ export class Lexer {
     while (this.currentChar != null &&
        WORD_OR_DIGIT_REGEXP.test(this.currentChar)) {
       const peekedWord = this.peekWord();
-      if (Lexer.RESERVED_KEYWORDS[peekedWord] !== undefined) {
+      if (Lexer.RESERVED_KEYWORDS[peekedWord.toUpperCase()] !== undefined) {
         if (result === '') {
           this.advance(peekedWord.length);
-          return Lexer.RESERVED_KEYWORDS[peekedWord];
+          return Lexer.RESERVED_KEYWORDS[peekedWord.toUpperCase()];
         } else {
           break;
         }
@@ -131,7 +129,7 @@ export class Lexer {
     }
     return new Token('REAL_CONST', result);
   }
-  string() {
+  private string() {
     let result = '';
     this.advance();
     while (this.currentChar != null && !(/\"/.test(this.currentChar))) {
@@ -139,6 +137,7 @@ export class Lexer {
       this.advance();
     }
     this.advance();
+    this.skipWhiteSpace(); // TODO not common
     let editable = false;
     if (this.currentChar != null && /\+/.test(this.currentChar)) {
       editable = true;
@@ -264,15 +263,13 @@ export class Lexer {
       }
       if (this.currentChar === '\r' && this.peek() === '\n' ||
       this.currentChar === '\n' && this.peek() === '\r') {
-        const value = this.currentChar + this.peek();
         this.advance();
         this.advance();
-        return new Token('ENTER', value);
+        continue;
       }
       if (this.currentChar === '\n' || this.currentChar === '\r') {
-        const value = this.currentChar;
         this.advance();
-        return new Token('ENTER', value);
+        continue;
       }
 
       this.error();

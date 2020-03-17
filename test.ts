@@ -10,21 +10,27 @@ import {Converter} from './converter';
 function main() {
   // const text = '5 - - - + - (3 + 4) - +2';
   const text = `
-  Test="Hello;One"
-  Дата_испытания=Дата
-  Xкон=ПОМЕТОДИКЕN(Хмасс; 1)
+  X = if (3 < 5;
+    0;
+    1)
   `;
   const lexer = new Lexer(text);
-  for (const token of new Detecter(lexer).enumVars()) console.log(token);// return;
-  // for (const token of new Detecter(text).enumerateTokens()) console.log(token); return;
+  // for (const token of new Detecter(lexer).enumVars()) console.log(token);// return;
+  // for (const token of new Detecter(lexer).enumerateTokens()) console.log(token); // return;
   // console.log(new Converter(lexer).convert()); return;
   const parser = new Parser(lexer);
   const globalScope = {
-    'D': 0.1,
-    'A': 3,
-    'B': 7,
-    'Tx': 9,
-    'Хмасс': 9,
+    'Аппарат': 'HI',
+    'Термометр': 'HI',
+    'Барометр': 'HI',
+    'VN': 3,
+    'V_n': 7,
+    'Тизм': 9,
+    'Po': 9,
+    'Т4': 9,
+    'Т3': 9,
+    'V4': 9,
+    'V3': 9,
   };
   const interpreter = new Interpreter(parser, globalScope);
   interpreter.interpret();

@@ -1,9 +1,7 @@
 /* eslint-disable require-jsdoc */
 import {Lexer, TokensObject} from './lexer';
-import {ChemicArrayToken, ChemicArrayVariableToken, VariableToken,
-  FunctionToken,
-  ChemicDateToken,
-  ChemicTimeToken} from './token';
+import Token, {ChemicArrayToken, ChemicArrayVariableToken, VariableToken,
+  FunctionToken} from './token';
 
 export class Detecter {
   lexer: Lexer;
@@ -35,13 +33,18 @@ export class Detecter {
             if (!result[token.value!]) {
               result[token.value!] = tmp;
             }
-          } else if (nextNextToken instanceof ChemicDateToken) {
-            const tmp = new ChemicDateToken(nextNextToken.type, token.value);
+          } else if (nextNextToken.type === 'DATE') {
+            const tmp = new Token(nextNextToken.type, token.value);
             if (!result[token.value!]) {
               result[token.value!] = tmp;
             }
-          } else if (nextNextToken instanceof ChemicTimeToken) {
-            const tmp = new ChemicTimeToken(nextNextToken.type, token.value);
+          } else if (nextNextToken.type === 'TIME') {
+            const tmp = new Token(nextNextToken.type, token.value);
+            if (!result[token.value!]) {
+              result[token.value!] = tmp;
+            }
+          } else if (nextNextToken.type === 'STRING_CONST') {
+            const tmp = new Token(nextNextToken.type, token.value);
             if (!result[token.value!]) {
               result[token.value!] = tmp;
             }
@@ -65,15 +68,6 @@ export class Detecter {
     }
     this.lexer.pos = pos;
     return Object.values(result);
-  }
-  * enumSpecificVars() {
-    for (const token of this.enumVars()) {
-      if (token instanceof ChemicArrayVariableToken ||
-        token instanceof ChemicDateToken ||
-        token instanceof ChemicTimeToken) {
-        yield token;
-      }
-    }
   }
 }
 export default Detecter;
