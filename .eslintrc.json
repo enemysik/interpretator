@@ -16,7 +16,8 @@
         "sourceType": "module"
     },
     "plugins": [
-        "@typescript-eslint"
+        "@typescript-eslint",
+        "only-warn"
     ],
     "rules": {
          // note you must disable the base rule as it can report incorrect errors
