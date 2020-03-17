@@ -24,7 +24,8 @@ export class VariableToken extends Token {
   isAssignable = false;
 }
 export class FunctionToken extends Token { }
-
+export class ChemicDateToken extends Token { }
+export class ChemicTimeToken extends Token { }
 export class ChemicArrayToken extends Token {
   possibleValues: string[];
   editable: boolean;

@@ -1,7 +1,8 @@
 /* eslint-disable require-jsdoc */
 import {Parser, BinOp, UnaryOp, Num, Compound,
   NoOp, Assign, Program, Block, VarDecl, Type,
-  ProcedureDecl, FunctionCall, Var, AST, Str, Arr, BoolOp} from './parser';
+  ProcedureDecl, FunctionCall, Var, AST, Str,
+  Arr, BoolOp, ChemicDate, ChemicTime} from './parser';
 import {ValueType} from './token';
 import {Lexer} from './lexer';
 import {GLOBAL_SCOPE_PROTOTYPE, Scope} from './global-functions-scope';
@@ -96,7 +97,9 @@ export class Interpreter {
   private visitNoOp(): void {}
   private visitAssign(node: Assign) {
     const varName = node.left.value as string;
-    if (node.right instanceof Arr) return; // TODO ignore combo variables
+    if (node.right instanceof Arr ||
+      node.right instanceof ChemicDate ||
+      node.right instanceof ChemicTime) return; // TODO ignore combo variables
     const right = this.visit(node.right);
     // console.log('assign', varName, this.GLOBAL_SCOPE[varName],
     //     typeof this.GLOBAL_SCOPE[varName], right, typeof right,

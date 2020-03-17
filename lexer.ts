@@ -1,5 +1,12 @@
 /* eslint-disable require-jsdoc */
-import {Token, ChemicArrayToken, VariableToken, FunctionToken} from './token';
+import {
+  Token,
+  ChemicArrayToken,
+  VariableToken,
+  FunctionToken,
+  ChemicTimeToken,
+  ChemicDateToken,
+} from './token';
 
 export const WORD_OR_DIGIT_REGEXP = /([А-Яа-яA-Za-z]|\d|\,|\_|\s|\.)/;
 export const WORD_REGEXP = /[А-Яа-яA-Za-z]/;
@@ -14,8 +21,8 @@ export class Lexer {
   private static RESERVED_KEYWORDS: TokensObject = {
     'И': new Token('AND', 'И'),
     'ИЛИ': new Token('OR', 'ИЛИ'),
-    'Дата': new Token('DATE', 'Дата'),
-    'Время': new Token('TIME', 'Время'),
+    'Дата': new ChemicDateToken('DATE', 'Дата'),
+    'Время': new ChemicTimeToken('TIME', 'Время'),
   }
   constructor(text: string) {
     this.text = text;

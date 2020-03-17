@@ -1,7 +1,9 @@
 /* eslint-disable require-jsdoc */
 import {Lexer, TokensObject} from './lexer';
 import {ChemicArrayToken, ChemicArrayVariableToken, VariableToken,
-  FunctionToken} from './token';
+  FunctionToken,
+  ChemicDateToken,
+  ChemicTimeToken} from './token';
 
 export class Detecter {
   lexer: Lexer;
@@ -27,8 +29,19 @@ export class Detecter {
       if (token.type === 'ID') {
         if (nextToken.type === 'ASSIGN') {
           if (nextNextToken instanceof ChemicArrayToken) {
-            const tmp = new ChemicArrayVariableToken(token.type, token.value,
+            const tmp = new ChemicArrayVariableToken(nextNextToken.type,
+                token.value,
                 nextNextToken.possibleValues, nextNextToken.editable);
+            if (!result[token.value!]) {
+              result[token.value!] = tmp;
+            }
+          } else if (nextNextToken instanceof ChemicDateToken) {
+            const tmp = new ChemicDateToken(nextNextToken.type, token.value);
+            if (!result[token.value!]) {
+              result[token.value!] = tmp;
+            }
+          } else if (nextNextToken instanceof ChemicTimeToken) {
+            const tmp = new ChemicTimeToken(nextNextToken.type, token.value);
             if (!result[token.value!]) {
               result[token.value!] = tmp;
             }
@@ -55,7 +68,9 @@ export class Detecter {
   }
   * enumArrayVars() {
     for (const token of this.enumVars()) {
-      if (token instanceof ChemicArrayVariableToken) {
+      if (token instanceof ChemicArrayVariableToken ||
+        token instanceof ChemicDateToken ||
+        token instanceof ChemicTimeToken) {
         yield token;
       }
     }
